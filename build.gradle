@@ -1,0 +1,43 @@
+apply plugin: 'java'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+group = 'me.jamiemansfield'
+version = '0.0.1-indev'
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://repo.jamiemansfield.me'
+    }
+}
+
+dependencies {
+    // CLI
+    compile 'net.sf.jopt-simple:jopt-simple:5.0.3'
+
+    // Bytecode Analysis
+    compile 'org.ow2.asm:asm-commons:6.0'
+
+    // Mappings IO
+    compile 'me.jamiemansfield:lorenz:0.0.1-20180221.141219-25'
+}
+
+processResources {
+    from 'LICENSE.txt'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Implementation-Title': name,
+                'Implementation-Version': version,
+                'Main-Class': 'me.jamiemansfield.survey.SurveyMain'
+        )
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.5.1'
+}
