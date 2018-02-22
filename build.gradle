@@ -1,10 +1,12 @@
 apply plugin: 'java'
+apply plugin: 'maven'
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 group = 'me.jamiemansfield'
-version = '0.0.1-indev'
+archivesBaseName = project.name.toLowerCase()
+version = '0.0.1-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -35,6 +37,72 @@ jar {
                 'Implementation-Version': version,
                 'Main-Class': 'me.jamiemansfield.survey.SurveyMain'
         )
+    }
+}
+
+javadoc {
+    options.encoding = 'UTF-8'
+    options.charSet = 'UTF-8'
+    options.links(
+            'http://ci.jamiemansfield.me/job/Lorenz/javadoc/',
+            'https://google.github.io/guava/releases/22.0/api/docs/',
+            'https://docs.oracle.com/javase/8/docs/api/'
+    )
+}
+
+task javadocJar(type: Jar, dependsOn: 'javadoc') {
+    from javadoc.destinationDir
+    classifier = 'javadoc'
+}
+
+task sourcesJar(type: Jar, dependsOn: 'classes') {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            if (System.getenv('MAVEN_RELEASES') != null) {
+                repository(url: 'file://' + System.getenv('MAVEN_RELEASES'))
+                snapshotRepository(url: 'file://' + System.getenv('MAVEN_SNAPSHOTS'))
+            }
+
+            pom {
+                artifactId = project.archivesBaseName
+
+                project {
+                    name = project.name
+                    description = project.description
+                    packaging = 'jar'
+                    url = project.url
+
+                    scm {
+                        url = 'https://github.com/jamiemansfield/Survey'
+                        connection = 'scm:git:https://github.com/jamiemansfield/Survey.git'
+                        developerConnection = 'scm:git:git@github.com:jamiemansfield/Survey.git'
+                    }
+
+                    issueManagement {
+                        system = 'GitHub'
+                        url = 'https://github.com/jamiemansfield/Survey/issues'
+                    }
+
+                    licenses {
+                        license {
+                            name = 'BSD 3-Clause'
+                            url = 'https://opensource.org/licenses/BSD-3-Clause'
+                            distribution = 'repo'
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
