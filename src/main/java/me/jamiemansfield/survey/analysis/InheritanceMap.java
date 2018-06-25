@@ -31,6 +31,7 @@
 package me.jamiemansfield.survey.analysis;
 
 import me.jamiemansfield.lorenz.model.jar.MethodDescriptor;
+import me.jamiemansfield.survey.jar.SourceSet;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.ArrayList;

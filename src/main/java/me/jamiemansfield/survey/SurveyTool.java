@@ -31,8 +31,8 @@
 package me.jamiemansfield.survey;
 
 import com.google.common.io.ByteStreams;
-import me.jamiemansfield.survey.analysis.JarWalker;
-import me.jamiemansfield.survey.analysis.SourceSet;
+import me.jamiemansfield.survey.jar.JarWalker;
+import me.jamiemansfield.survey.jar.SourceSet;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;

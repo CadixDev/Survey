@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package me.jamiemansfield.survey.analysis;
+package me.jamiemansfield.survey.jar;
 
 import com.google.common.io.ByteStreams;
 import org.objectweb.asm.ClassReader;

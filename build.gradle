@@ -41,6 +41,9 @@ dependencies {
 
     // CSV
     compile 'me.jamiemansfield:csv:0.1.0'
+
+    // Caching
+    compile 'com.github.ben-manes.caffeine:caffeine:2.6.2'
 }
 
 license {
