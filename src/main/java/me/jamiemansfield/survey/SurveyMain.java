@@ -38,12 +38,12 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import me.jamiemansfield.lorenz.MappingSet;
-import me.jamiemansfield.lorenz.io.parser.SrgReader;
+import me.jamiemansfield.lorenz.io.reader.MappingsReader;
 import me.jamiemansfield.lorenz.model.Mapping;
 import me.jamiemansfield.survey.analysis.InheritanceMap;
+import me.jamiemansfield.survey.analysis.JarWalker;
 import me.jamiemansfield.survey.analysis.SourceSet;
 import me.jamiemansfield.survey.util.PathValueConverter;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.tree.ClassNode;
@@ -77,6 +77,10 @@ public final class SurveyMain {
         final OptionSpec<Path> mappingsPathSpec = parser.accepts("mappings", "The location of the mappings")
                 .withRequiredArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
+        final OptionSpec<MappingFormat> mappingsFormatSpec = parser.accepts("mappingsFormat", "The format of the mappings")
+                .withRequiredArg()
+                .ofType(MappingFormat.class)
+                .defaultsTo(MappingFormat.SRG);
         final OptionSpec<Path> jarOutPathSpec = parser.accepts("jarOut", "Where to save the mapped jar")
                 .withRequiredArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
@@ -104,15 +108,16 @@ public final class SurveyMain {
 
         final Path jarInPath = options.valueOf(jarInPathSpec);
         final Path mappingsPath = options.valueOf(mappingsPathSpec);
+        final MappingFormat mappingFormat = options.valueOf(mappingsFormatSpec);
         final Path jarOutPath = options.valueOf(jarOutPathSpec);
 
         if (!(Files.exists(jarInPath) && Files.exists(mappingsPath))) {
             throw new RuntimeException("Jar in, mappings, or both do not exist!");
         }
 
-        final MappingSet mappings = new MappingSet();
+        final MappingSet mappings = MappingSet.create();
 
-        try (final SrgReader reader = new SrgReader(new BufferedReader(new InputStreamReader(Files.newInputStream(mappingsPath))))) {
+        try (final MappingsReader reader = mappingFormat.create(new BufferedReader(new InputStreamReader(Files.newInputStream(mappingsPath))))) {
             reader.parse(mappings);
         }
         catch (final IOException ex) {
@@ -122,24 +127,7 @@ public final class SurveyMain {
         try (final JarFile jarFile = new JarFile(jarInPath.toFile())) {
             final SourceSet sources = new SourceSet();
             final InheritanceMap inheritanceMap = new InheritanceMap(sources);
-
-            jarFile.stream()
-                    // Filter out directories
-                    .filter(entry -> !entry.isDirectory())
-                    // I only want to get classes
-                    .filter(entry -> entry.getName().endsWith(".class"))
-                    // Now to read the class
-                    .forEach(entry -> {
-                        try (final InputStream in = jarFile.getInputStream(entry)) {
-                            final ClassReader reader = new ClassReader(ByteStreams.toByteArray(in));
-                            final ClassNode node = new ClassNode();
-                            reader.accept(node, 0);
-                            sources.add(node);
-                        } catch (final IOException ex) {
-                            System.err.println("Failed to get an input stream for " + entry.getName() + "!");
-                            ex.printStackTrace(System.err);
-                        }
-                    });
+            JarWalker.walk(jarFile, sources);
 
             try (final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(jarOutPath))) {
                 for (final JarEntry entry : jarFile.stream().collect(Collectors.toSet())) {

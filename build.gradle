@@ -10,9 +10,6 @@ version = '0.0.1-SNAPSHOT'
 
 repositories {
     mavenCentral()
-    maven {
-        url 'https://repo.jamiemansfield.me'
-    }
 }
 
 dependencies {
@@ -23,7 +20,7 @@ dependencies {
     compile 'org.ow2.asm:asm-commons:6.0'
 
     // Mappings IO
-    compile 'me.jamiemansfield:lorenz:0.0.1-20180221.141219-25'
+    compile 'me.jamiemansfield:lorenz:0.2.0'
 }
 
 processResources {
@@ -44,7 +41,7 @@ javadoc {
     options.encoding = 'UTF-8'
     options.charSet = 'UTF-8'
     options.links(
-            'http://ci.jamiemansfield.me/job/Lorenz/javadoc/',
+            'https://www.javadoc.io/doc/me.jamiemansfield/lorenz/0.2.0',
             'https://google.github.io/guava/releases/22.0/api/docs/',
             'https://docs.oracle.com/javase/8/docs/api/'
     )

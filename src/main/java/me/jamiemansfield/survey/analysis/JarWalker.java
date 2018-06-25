@@ -68,27 +68,38 @@ public class JarWalker implements Walker {
     @Override
     public void walk(final SourceSet sourceSet) {
         try (final JarFile jarFile = new JarFile(this.jarFile)) {
-            jarFile.stream()
-                    // Filter out directories
-                    .filter(entry -> !entry.isDirectory())
-                    // I only want to get classes
-                    .filter(entry -> entry.getName().endsWith(".class"))
-                    // Now to read the class
-                    .forEach(entry -> {
-                        try (final InputStream in = jarFile.getInputStream(entry)) {
-                            final ClassReader reader = new ClassReader(ByteStreams.toByteArray(in));
-                            final ClassNode node = new ClassNode();
-                            reader.accept(node, 0);
-                            sourceSet.add(node);
-                        } catch (final IOException ex) {
-                            System.err.println("Failed to get an input stream for " + entry.getName() + "!");
-                            ex.printStackTrace(System.err);
-                        }
-                    });
+            walk(jarFile, sourceSet);
         } catch (final IOException ex) {
             System.err.println("Failed to read the jar file!");
             ex.printStackTrace(System.err);
         }
+    }
+
+    /**
+     * Walks through the given source, and loads the {@link ClassNode}s
+     * into the given {@link SourceSet}.
+     *
+     * @param jarFile The jar file to walk
+     * @param sourceSet The source set
+     */
+    public static void walk(final JarFile jarFile, final SourceSet sourceSet) {
+        jarFile.stream()
+                // Filter out directories
+                .filter(entry -> !entry.isDirectory())
+                // I only want to get classes
+                .filter(entry -> entry.getName().endsWith(".class"))
+                // Now to read the class
+                .forEach(entry -> {
+                    try (final InputStream in = jarFile.getInputStream(entry)) {
+                        final ClassReader reader = new ClassReader(ByteStreams.toByteArray(in));
+                        final ClassNode node = new ClassNode();
+                        reader.accept(node, 0);
+                        sourceSet.add(node);
+                    } catch (final IOException ex) {
+                        System.err.println("Failed to get an input stream for " + entry.getName() + "!");
+                        ex.printStackTrace(System.err);
+                    }
+                });
     }
 
 }
