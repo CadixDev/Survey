@@ -32,7 +32,6 @@ package me.jamiemansfield.survey;
 
 import static java.util.Arrays.asList;
 
-import com.google.common.io.ByteStreams;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -41,24 +40,13 @@ import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.io.reader.MappingsReader;
 import me.jamiemansfield.lorenz.model.Mapping;
 import me.jamiemansfield.survey.analysis.InheritanceMap;
-import me.jamiemansfield.survey.analysis.JarWalker;
-import me.jamiemansfield.survey.analysis.SourceSet;
 import me.jamiemansfield.survey.util.PathValueConverter;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.commons.ClassRemapper;
-import org.objectweb.asm.tree.ClassNode;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
-import java.util.stream.Collectors;
 
 /**
  * The Main-Class behind Survey, a simple remapping tool.
@@ -124,46 +112,17 @@ public final class SurveyMain {
             ex.printStackTrace();
         }
 
-        try (final JarFile jarFile = new JarFile(jarInPath.toFile())) {
-            final SourceSet sources = new SourceSet();
-            final InheritanceMap inheritanceMap = new InheritanceMap(sources);
-            JarWalker.walk(jarFile, sources);
-
-            try (final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(jarOutPath))) {
-                for (final JarEntry entry : jarFile.stream().collect(Collectors.toSet())) {
-                    try (final InputStream is = jarFile.getInputStream(entry)) {
-                        if (!entry.getName().endsWith(".class") && !entry.isDirectory()) {
-                            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            ByteStreams.copy(is, baos);
-
-                            jos.putNextEntry(new JarEntry(entry.getName()));
-                            jos.write(baos.toByteArray());
-                        }
-                    }
-                }
-
-                for (final ClassNode node : sources.getClasses()) {
-                    final ClassNode newNode = new ClassNode();
-                    node.accept(new ClassRemapper(newNode, new SurveyRemapper(mappings, inheritanceMap)));
-
-                    final ClassWriter writer = new ClassWriter(0);
-                    newNode.accept(writer);
-
-                    final String name = mappings.getClassMapping(newNode.name)
-                            .map(Mapping::getFullDeobfuscatedName)
-                            .orElse(newNode.name);
-
-                    jos.putNextEntry(new JarEntry(name + ".class"));
-                    jos.write(writer.toByteArray());
-                }
-            }
-            catch (final IOException ex) {
-                ex.printStackTrace();
-            }
-        } catch (final IOException ex) {
-            System.err.println("Failed to read the jar file!");
-            ex.printStackTrace(System.err);
-        }
+        SurveyTool.remapJar(
+                jarInPath,
+                sources -> {
+                    final InheritanceMap inheritanceMap = new InheritanceMap(sources);
+                    return new SurveyRemapper(mappings, inheritanceMap);
+                },
+                klassName -> mappings.getClassMapping(klassName)
+                        .map(Mapping::getFullDeobfuscatedName)
+                        .orElse(klassName),
+                jarOutPath
+        );
     }
 
     private SurveyMain() {
