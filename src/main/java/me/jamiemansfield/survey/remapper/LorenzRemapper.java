@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package me.jamiemansfield.survey;
+package me.jamiemansfield.survey.remapper;
 
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.model.Mapping;
@@ -44,12 +44,12 @@ import java.util.Optional;
  * A simple implementation of {@link Remapper} to remap based
  * on a {@link MappingSet}.
  */
-public class SurveyRemapper extends Remapper {
+public class LorenzRemapper extends Remapper {
 
     private final MappingSet mappings;
     private final InheritanceMap inheritanceMap;
 
-    public SurveyRemapper(final MappingSet mappings, final InheritanceMap inheritanceMap) {
+    public LorenzRemapper(final MappingSet mappings, final InheritanceMap inheritanceMap) {
         this.mappings = mappings;
         this.inheritanceMap = inheritanceMap;
     }

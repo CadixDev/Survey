@@ -40,6 +40,7 @@ import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.io.reader.MappingsReader;
 import me.jamiemansfield.lorenz.model.Mapping;
 import me.jamiemansfield.survey.analysis.InheritanceMap;
+import me.jamiemansfield.survey.remapper.LorenzRemapper;
 import me.jamiemansfield.survey.util.PathValueConverter;
 
 import java.io.BufferedReader;
@@ -116,7 +117,7 @@ public final class SurveyMain {
                 jarInPath,
                 sources -> {
                     final InheritanceMap inheritanceMap = new InheritanceMap(sources);
-                    return new SurveyRemapper(mappings, inheritanceMap);
+                    return new LorenzRemapper(mappings, inheritanceMap);
                 },
                 klassName -> mappings.getClassMapping(klassName)
                         .map(Mapping::getFullDeobfuscatedName)

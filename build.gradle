@@ -21,6 +21,9 @@ dependencies {
 
     // Mappings IO
     compile 'me.jamiemansfield:lorenz:0.2.0'
+
+    // CSV
+    compile 'me.jamiemansfield:csv:0.1.0'
 }
 
 processResources {
@@ -41,7 +44,8 @@ javadoc {
     options.encoding = 'UTF-8'
     options.charSet = 'UTF-8'
     options.links(
-            'https://www.javadoc.io/doc/me.jamiemansfield/lorenz/0.2.0',
+            'https://www.javadoc.io/doc/me.jamiemansfield/lorenz/0.2.0/',
+            'https://www.javadoc.io/doc/me.jamiemansfield/csv/0.1.0/',
             'https://google.github.io/guava/releases/22.0/api/docs/',
             'https://docs.oracle.com/javase/8/docs/api/'
     )
