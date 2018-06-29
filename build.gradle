@@ -1,12 +1,27 @@
+buildscript {
+    repositories {
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+    }
+    dependencies {
+        classpath 'gradle.plugin.net.minecrell:licenser:0.3'
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'maven'
+if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+    apply plugin: 'signing'
+}
+apply plugin: 'net.minecrell.licenser'
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 group = 'me.jamiemansfield'
 archivesBaseName = project.name.toLowerCase()
-version = '0.0.1-SNAPSHOT'
+version = '0.1.0'
 
 repositories {
     mavenCentral()
@@ -24,6 +39,10 @@ dependencies {
 
     // CSV
     compile 'me.jamiemansfield:csv:0.1.0'
+}
+
+license {
+    header = project.file('HEADER.txt')
 }
 
 processResources {
@@ -44,8 +63,8 @@ javadoc {
     options.encoding = 'UTF-8'
     options.charSet = 'UTF-8'
     options.links(
-            'https://www.javadoc.io/doc/me.jamiemansfield/lorenz/0.2.0/',
-            'https://www.javadoc.io/doc/me.jamiemansfield/csv/0.1.0/',
+            'https://jd.jamiemansfield.me/lorenz/0.2.0/',
+            'https://jd.jamiemansfield.me/csv/0.1.0/',
             'https://google.github.io/guava/releases/22.0/api/docs/',
             'https://docs.oracle.com/javase/8/docs/api/'
     )
@@ -66,12 +85,32 @@ artifacts {
     archives sourcesJar
 }
 
+if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+    signing {
+        sign configurations.archives
+    }
+}
+
 uploadArchives {
     repositories {
         mavenDeployer {
-            if (System.getenv('MAVEN_RELEASES') != null) {
+            // repo.jamiemansfield.me
+            if (System.getenv('MAVEN_RELEASES') != null && System.getenv('MAVEN_SNAPSHOTS') != null) {
                 repository(url: 'file://' + System.getenv('MAVEN_RELEASES'))
                 snapshotRepository(url: 'file://' + System.getenv('MAVEN_SNAPSHOTS'))
+            }
+
+            // Maven Central
+            if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+
+                snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
             }
 
             pom {
@@ -82,6 +121,7 @@ uploadArchives {
                     description = project.description
                     packaging = 'jar'
                     url = project.url
+                    inceptionYear = project.inceptionYear
 
                     scm {
                         url = 'https://github.com/jamiemansfield/Survey'
@@ -99,6 +139,16 @@ uploadArchives {
                             name = 'BSD 3-Clause'
                             url = 'https://opensource.org/licenses/BSD-3-Clause'
                             distribution = 'repo'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'jamierocks'
+                            name = 'Jamie Mansfield'
+                            email = 'dev@jamierocks.uk'
+                            url = 'https://www.jamiemansfield.me/'
+                            timezone = 'Europe/London'
                         }
                     }
                 }
