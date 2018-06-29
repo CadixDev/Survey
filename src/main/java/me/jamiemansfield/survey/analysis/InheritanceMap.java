@@ -40,6 +40,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * An inheritance map stores inheritance information on classes, which
+ * will be obtained upon request (if not present in the cache) as opposed
+ * to all in one bulk operation.
+ *
+ * @author Jamie Mansfield
+ * @since 0.1.0
+ */
 public class InheritanceMap {
 
     private final Map<String, ClassInfo> classes = new HashMap<>();

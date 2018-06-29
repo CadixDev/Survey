@@ -39,6 +39,9 @@ import java.util.Map;
 
 /**
  * Represents a container for a set of {@link ClassNode}s.
+ *
+ * @author Jamie Mansfield
+ * @since 0.1.0
  */
 public final class SourceSet {
 

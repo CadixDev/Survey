@@ -43,6 +43,9 @@ import java.util.Optional;
 /**
  * A simple implementation of {@link Remapper} to remap based
  * on a {@link MappingSet}.
+ *
+ * @author Jamie Mansfield
+ * @since 0.1.0
  */
 public class LorenzRemapper extends Remapper {
 

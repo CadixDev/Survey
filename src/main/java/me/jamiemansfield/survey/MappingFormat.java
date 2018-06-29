@@ -41,6 +41,9 @@ import java.util.function.Function;
 /**
  * The many mapping formats that are supported by Survey's CLI, all provided
  * by Lorenz.
+ *
+ * @author Jamie Mansfield
+ * @since 0.1.0
  */
 public enum MappingFormat {
 

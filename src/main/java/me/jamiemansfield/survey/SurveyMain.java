@@ -51,6 +51,9 @@ import java.nio.file.Path;
 
 /**
  * The Main-Class behind Survey, a simple remapping tool.
+ *
+ * @author Jamie Mansfield
+ * @since 0.1.0
  */
 public final class SurveyMain {
 

@@ -35,6 +35,12 @@ import joptsimple.ValueConverter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * An implementation of {@link ValueConverter} for handling {@link Path}s.
+ *
+ * @author Jamie Mansfield
+ * @since 0.1.0
+ */
 public final class PathValueConverter implements ValueConverter<Path> {
 
     public static final PathValueConverter INSTANCE = new PathValueConverter();

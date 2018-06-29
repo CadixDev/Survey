@@ -42,6 +42,9 @@ import java.util.jar.JarFile;
 
 /**
  * An implementation of {@link Walker} for walking a jar file.
+ *
+ * @author Jamie Mansfield
+ * @since 0.1.0
  */
 public class JarWalker implements Walker {
 

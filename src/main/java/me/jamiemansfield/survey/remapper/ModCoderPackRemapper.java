@@ -40,6 +40,9 @@ import java.util.Optional;
 
 /**
  * A remapper for named MCP mappings (fields.csv + methods.csv).
+ *
+ * @author Jamie Mansfield
+ * @since 0.1.0
  */
 public class ModCoderPackRemapper extends Remapper {
 

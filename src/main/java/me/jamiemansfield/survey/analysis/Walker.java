@@ -35,6 +35,11 @@ import org.objectweb.asm.tree.ClassNode;
 /**
  * Represents an object, that can walk through classes and
  * load them into a {@link SourceSet}.
+ *
+ * @see JarWalker
+ *
+ * @author Jamie Mansfield
+ * @since 0.1.0
  */
 public interface Walker {
 

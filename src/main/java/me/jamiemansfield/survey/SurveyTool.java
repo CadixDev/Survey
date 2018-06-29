@@ -51,6 +51,9 @@ import java.util.stream.Collectors;
 
 /**
  * A utility class for remapping jar files.
+ *
+ * @author Jamie Mansfield
+ * @since 0.1.0
  */
 public final class SurveyTool {
 
