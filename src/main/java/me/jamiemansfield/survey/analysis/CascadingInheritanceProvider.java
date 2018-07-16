@@ -34,6 +34,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * A cascading {@link InheritanceProvider} allows for class information to be
+ * pooled from multiple sources.
+ */
 public class CascadingInheritanceProvider implements InheritanceProvider {
 
     private final ArrayList<InheritanceProvider> providers;

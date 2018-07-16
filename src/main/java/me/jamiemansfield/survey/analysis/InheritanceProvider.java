@@ -37,22 +37,67 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * An inheritance provider stores inheritance information on classes, which
+ * will be obtained upon request (if not present in the cache) as opposed
+ * to all in one bulk operation.
+ *
+ * @author Jamie Mansfield
+ * @since 0.2.0
+ */
 public interface InheritanceProvider {
 
+    /**
+     * Gets the class information for the given class name, if available.
+     *
+     * @param klass The class name
+     * @return The class information wrapped in an {@link Optional}
+     */
     Optional<ClassInfo> provide(final String klass);
 
+    /**
+     * A wrapper used to store inheritance information about classes.
+     */
     interface ClassInfo {
 
+        /**
+         * Gets the name of the class.
+         *
+         * @return The class' name
+         */
         String getName();
 
+        /**
+         * Gets the name of this class' super class.
+         *
+         * @return The super name
+         */
         String getSuperName();
 
+        /**
+         * Gets an immutable-view of all the interfaces of the class.
+         *
+         * @return The class' interfaces
+         */
         List<String> getInterfaces();
 
+        /**
+         * Gets an immutable-view of all the fields of the class.
+         *
+         * @return The class' fields
+         */
         List<String> getFields();
 
+        /**
+         * Gets an immutable-view of all the methods.
+         *
+         * @return The methods
+         */
         List<MethodSignature> getMethods();
 
+        /**
+         * A default implementation of {@link ClassInfo}.
+         */
         abstract class Impl implements ClassInfo {
 
             protected final String name;

@@ -33,7 +33,7 @@ package me.jamiemansfield.survey.remapper;
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.model.Mapping;
 import me.jamiemansfield.lorenz.model.jar.signature.MethodSignature;
-import me.jamiemansfield.survey.analysis.InheritanceMap;
+import me.jamiemansfield.survey.analysis.InheritanceProvider;
 import org.objectweb.asm.commons.Remapper;
 
 import java.util.ArrayList;
@@ -50,11 +50,11 @@ import java.util.Optional;
 public class LorenzRemapper extends Remapper {
 
     private final MappingSet mappings;
-    private final InheritanceMap inheritanceMap;
+    private final InheritanceProvider inheritance;
 
-    public LorenzRemapper(final MappingSet mappings, final InheritanceMap inheritanceMap) {
+    public LorenzRemapper(final MappingSet mappings, final InheritanceProvider inheritance) {
         this.mappings = mappings;
-        this.inheritanceMap = inheritanceMap;
+        this.inheritance = inheritance;
     }
 
     @Override
@@ -79,7 +79,7 @@ public class LorenzRemapper extends Remapper {
         if (fieldName.isPresent()) return fieldName;
 
         // Now, check the parent class
-        final Optional<InheritanceMap.ClassInfo> info = this.inheritanceMap.classInfo(owner);
+        final Optional<InheritanceProvider.ClassInfo> info = this.inheritance.provide(owner);
         if (info.isPresent() && info.get().getSuperName() != null) {
             return this.getFieldMapping(info.get().getSuperName(), name);
         }
@@ -108,7 +108,7 @@ public class LorenzRemapper extends Remapper {
         if (methodName.isPresent()) return methodName;
 
         // Now, check the parent classes
-        final Optional<InheritanceMap.ClassInfo> info = this.inheritanceMap.classInfo(owner);
+        final Optional<InheritanceProvider.ClassInfo> info = this.inheritance.provide(owner);
         if (info.isPresent()) {
             final List<String> parents = new ArrayList<String>() {
                 {
