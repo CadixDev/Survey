@@ -31,7 +31,6 @@
 package me.jamiemansfield.survey.mapper;
 
 import me.jamiemansfield.lorenz.MappingSet;
-import me.jamiemansfield.lorenz.io.writer.TSrgWriter;
 import me.jamiemansfield.lorenz.model.ClassMapping;
 import me.jamiemansfield.lorenz.model.FieldMapping;
 import me.jamiemansfield.lorenz.model.MethodMapping;
@@ -41,14 +40,9 @@ import me.jamiemansfield.survey.analysis.CascadingInheritanceProvider;
 import me.jamiemansfield.survey.analysis.ClassLoaderInheritanceProvider;
 import me.jamiemansfield.survey.analysis.InheritanceProvider;
 import me.jamiemansfield.survey.analysis.SourceSetInheritanceProvider;
-import me.jamiemansfield.survey.jar.JarWalker;
 import me.jamiemansfield.survey.jar.SourceSet;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -75,12 +69,7 @@ public class IntermediaryMapper {
     private static final String FIELD_PREFIX = "field_";
     private static final String METHOD_PREFIX = "func_";
 
-    public static void main(final String[] args) {
-
-        final SourceSet sources = new SourceSet();
-        final MappingSet mappings = MappingSet.create();
-        new JarWalker(Paths.get("joined.jar")).walk(sources);
-
+    public static void map(final SourceSet sources, final MappingSet mappings) {
         final IntermediaryMapper mapper = new IntermediaryMapper(mappings, sources);
         // First pass
         sources.getClasses().stream()
@@ -89,13 +78,6 @@ public class IntermediaryMapper {
         // Second pass
         sources.getClasses()
                 .forEach(node -> mapper.map(node, false));
-
-        try (final TSrgWriter writer = new TSrgWriter(new PrintWriter(Files.newOutputStream(Paths.get("survey.tsrg"))))) {
-            writer.write(mappings);
-        }
-        catch (final IOException ex) {
-            ex.printStackTrace();
-        }
     }
 
     private final MappingSet mappings;

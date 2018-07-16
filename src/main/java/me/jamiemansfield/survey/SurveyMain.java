@@ -38,14 +38,19 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.io.reader.MappingsReader;
+import me.jamiemansfield.lorenz.io.writer.MappingsWriter;
 import me.jamiemansfield.lorenz.model.Mapping;
 import me.jamiemansfield.survey.analysis.InheritanceMap;
+import me.jamiemansfield.survey.jar.JarWalker;
+import me.jamiemansfield.survey.jar.SourceSet;
+import me.jamiemansfield.survey.mapper.IntermediaryMapper;
 import me.jamiemansfield.survey.remapper.LorenzRemapper;
 import me.jamiemansfield.survey.util.PathValueConverter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -63,18 +68,29 @@ public final class SurveyMain {
         final OptionSpec<Void> helpSpec = parser.acceptsAll(asList("?", "help"), "Show the help")
                 .forHelp();
 
+        // Modes
+        final OptionSpec<Void> remapSpec = parser.accepts("remap", "Remap a jar");
+        final OptionSpec<Void> intMapSpec = parser.acceptsAll(asList("int-map", "intermediary-map"), "Create intermediary mappings for a jar");
+
+        // Options
         final OptionSpec<Path> jarInPathSpec = parser.accepts("jarIn", "The location of the jar to map")
                 .withRequiredArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
         final OptionSpec<Path> mappingsPathSpec = parser.accepts("mappings", "The location of the mappings")
-                .withRequiredArg()
+                .requiredIf(remapSpec)
+                .withOptionalArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
         final OptionSpec<MappingFormat> mappingsFormatSpec = parser.accepts("mappingsFormat", "The format of the mappings")
                 .withRequiredArg()
                 .ofType(MappingFormat.class)
                 .defaultsTo(MappingFormat.SRG);
         final OptionSpec<Path> jarOutPathSpec = parser.accepts("jarOut", "Where to save the mapped jar")
-                .withRequiredArg()
+                .requiredIf(remapSpec)
+                .withOptionalArg()
+                .withValuesConvertedBy(PathValueConverter.INSTANCE);
+        final OptionSpec<Path> mappingsOutPathSpec = parser.accepts("mappingsOut", "Where to save the intermediary mappings")
+                .requiredIf(intMapSpec)
+                .withOptionalArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
 
         final OptionSet options;
@@ -99,34 +115,81 @@ public final class SurveyMain {
         }
 
         final Path jarInPath = options.valueOf(jarInPathSpec);
-        final Path mappingsPath = options.valueOf(mappingsPathSpec);
         final MappingFormat mappingFormat = options.valueOf(mappingsFormatSpec);
-        final Path jarOutPath = options.valueOf(jarOutPathSpec);
 
-        if (!(Files.exists(jarInPath) && Files.exists(mappingsPath))) {
-            throw new RuntimeException("Jar in, mappings, or both do not exist!");
+        if (Files.notExists(jarInPath)) {
+            throw new RuntimeException("Input jar does not exist!");
         }
 
-        final MappingSet mappings = MappingSet.create();
+        if (options.has(remapSpec)) {
+            final Path mappingsPath = options.valueOf(mappingsPathSpec);
+            final Path jarOutPath = options.valueOf(jarOutPathSpec);
 
-        try (final MappingsReader reader = mappingFormat.create(new BufferedReader(new InputStreamReader(Files.newInputStream(mappingsPath))))) {
-            reader.parse(mappings);
-        }
-        catch (final IOException ex) {
-            ex.printStackTrace();
-        }
+            if (Files.notExists(mappingsPath)) {
+                throw new RuntimeException("Input mappings does not exist!");
+            }
 
-        SurveyTool.remapJar(
-                jarInPath,
-                sources -> {
-                    final InheritanceMap inheritanceMap = new InheritanceMap(sources);
-                    return new LorenzRemapper(mappings, inheritanceMap);
-                },
-                klassName -> mappings.getClassMapping(klassName)
-                        .map(Mapping::getFullDeobfuscatedName)
-                        .orElse(klassName),
-                jarOutPath
-        );
+            final MappingSet mappings = MappingSet.create();
+
+            try (final MappingsReader reader = mappingFormat.create(new BufferedReader(new InputStreamReader(Files.newInputStream(mappingsPath))))) {
+                reader.parse(mappings);
+            }
+            catch (final IOException ex) {
+                ex.printStackTrace();
+            }
+
+            SurveyTool.remapJar(
+                    jarInPath,
+                    sources -> {
+                        final InheritanceMap inheritanceMap = new InheritanceMap(sources);
+                        return new LorenzRemapper(mappings, inheritanceMap);
+                    },
+                    klassName -> mappings.getClassMapping(klassName)
+                            .map(Mapping::getFullDeobfuscatedName)
+                            .orElse(klassName),
+                    jarOutPath
+            );
+        }
+        else if (options.has(intMapSpec)) {
+            final Path mappingsOutPath = options.valueOf(mappingsOutPathSpec);
+
+            final SourceSet sources = new SourceSet();
+            new JarWalker(jarInPath).walk(sources);
+
+            final MappingSet mappings = MappingSet.create();
+
+            if (options.has(mappingsPathSpec)) {
+                final Path mappingsPath = options.valueOf(mappingsPathSpec);
+
+                if (Files.notExists(mappingsPath)) {
+                    throw new RuntimeException("Input mappings does not exist!");
+                }
+
+                try (final MappingsReader reader = mappingFormat.create(new BufferedReader(new InputStreamReader(Files.newInputStream(mappingsPath))))) {
+                    reader.parse(mappings);
+                }
+                catch (final IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            IntermediaryMapper.map(sources, mappings);
+
+            try (final MappingsWriter writer = mappingFormat.create(new PrintWriter(Files.newOutputStream(mappingsOutPath)))) {
+                writer.write(mappings);
+            }
+            catch (final IOException ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            try {
+                parser.printHelpOn(System.err);
+            } catch (final IOException ex) {
+                System.err.println("Failed to print help information!");
+                ex.printStackTrace(System.err);
+            }
+            System.exit(-1);
+        }
     }
 
     private SurveyMain() {
