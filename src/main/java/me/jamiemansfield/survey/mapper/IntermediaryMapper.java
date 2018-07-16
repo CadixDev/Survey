@@ -35,6 +35,8 @@ import me.jamiemansfield.lorenz.model.ClassMapping;
 import me.jamiemansfield.lorenz.model.FieldMapping;
 import me.jamiemansfield.lorenz.model.MethodMapping;
 import me.jamiemansfield.lorenz.model.jar.MethodDescriptor;
+import me.jamiemansfield.survey.analysis.CascadingInheritanceProvider;
+import me.jamiemansfield.survey.analysis.ClassLoaderInheritanceProvider;
 import me.jamiemansfield.survey.analysis.InheritanceProvider;
 import me.jamiemansfield.survey.analysis.SourceSetInheritanceProvider;
 import me.jamiemansfield.survey.jar.JarWalker;
@@ -47,11 +49,10 @@ public class IntermediaryMapper {
 
     public static void main(final String[] args) {
         final SourceSet sources = new SourceSet();
-        final MappingSet mappings = new MappingSet();
+        final MappingSet mappings = MappingSet.create();
         new JarWalker(Paths.get("joined.jar"));
-        final InheritanceProvider inheritance = new SourceSetInheritanceProvider(sources);
 
-        final IntermediaryMapper mapper = new IntermediaryMapper(mappings, inheritance);
+        final IntermediaryMapper mapper = new IntermediaryMapper(mappings, sources);
         sources.getClasses().forEach(klass -> mapper.map(klass.name));
     }
 
@@ -60,32 +61,29 @@ public class IntermediaryMapper {
 
     private final AtomicInteger count = new AtomicInteger();
 
-    private IntermediaryMapper(final MappingSet mappings, final InheritanceProvider inheritance) {
+    private IntermediaryMapper(final MappingSet mappings, final SourceSet sources) {
         this.mappings = mappings;
-        this.inheritance = inheritance;
+        this.inheritance = new CascadingInheritanceProvider()
+                .install(new SourceSetInheritanceProvider(sources))
+                .install(new ClassLoaderInheritanceProvider(IntermediaryMapper.class.getClassLoader()));
     }
 
     public void map(final String klass) {
-        final InheritanceProvider.ClassInfo classInfo = this.inheritance.provide(klass);
-        if (classInfo != null) this.map0(classInfo);
+        this.inheritance.provide(klass).ifPresent(this::map0);
     }
 
     private void map0(final InheritanceProvider.ClassInfo info) {
-
-
     }
 
     private FieldMapping mapField(final ClassMapping classMapping, final String fieldName) {
-        return new FieldMapping(
-                classMapping,
+        return classMapping.createFieldMapping(
                 fieldName,
                 "field_" + this.count.getAndIncrement() + "_" + fieldName
         );
     }
 
     private MethodMapping mapMethod(final ClassMapping classMapping, final MethodDescriptor descriptor) {
-        return new MethodMapping(
-                classMapping,
+        return classMapping.createMethodMapping(
                 descriptor,
                 "func_" + this.count.getAndIncrement() + "_" + descriptor.getName()
         );
