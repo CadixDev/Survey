@@ -39,14 +39,10 @@ import joptsimple.OptionSpec;
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.io.reader.MappingsReader;
 import me.jamiemansfield.lorenz.io.writer.MappingsWriter;
-import me.jamiemansfield.lorenz.model.Mapping;
-import me.jamiemansfield.survey.analysis.InheritanceProvider;
-import me.jamiemansfield.survey.analysis.SourceSetInheritanceProvider;
 import me.jamiemansfield.survey.jar.JarWalker;
 import me.jamiemansfield.survey.jar.SourceSet;
 import me.jamiemansfield.survey.mapper.IntermediaryMapper;
 import me.jamiemansfield.survey.mapper.IntermediaryMapperConfig;
-import me.jamiemansfield.survey.remapper.LorenzRemapper;
 import me.jamiemansfield.survey.util.PathValueConverter;
 
 import java.io.BufferedReader;
@@ -134,26 +130,9 @@ public final class SurveyMain {
                 throw new RuntimeException("Input mappings does not exist!");
             }
 
-            final MappingSet mappings = MappingSet.create();
-
-            try (final MappingsReader reader = mappingFormat.create(new BufferedReader(new InputStreamReader(Files.newInputStream(mappingsPath))))) {
-                reader.parse(mappings);
-            }
-            catch (final IOException ex) {
-                ex.printStackTrace();
-            }
-
-            SurveyTool.remapJar(
-                    jarInPath,
-                    sources -> {
-                        final InheritanceProvider inheritance = new SourceSetInheritanceProvider(sources);
-                        return new LorenzRemapper(mappings, inheritance);
-                    },
-                    klassName -> mappings.getClassMapping(klassName)
-                            .map(Mapping::getFullDeobfuscatedName)
-                            .orElse(klassName),
-                    jarOutPath
-            );
+            new SurveyMapper()
+                    .loadMappings(mappingsPath, mappingFormat.getReaderConstructor())
+                    .remap(jarInPath, jarOutPath);
         }
         else if (options.has(intMapSpec)) {
             final Path mappingsOutPath = options.valueOf(mappingsOutPathSpec);

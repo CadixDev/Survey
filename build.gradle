@@ -26,7 +26,6 @@ archivesBaseName = project.name.toLowerCase()
 version = '0.2.0-SNAPSHOT'
 
 repositories {
-    mavenLocal() // todo: temp
     mavenCentral()
 }
 
