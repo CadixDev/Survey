@@ -30,7 +30,7 @@
 
 package me.jamiemansfield.survey.analysis;
 
-import me.jamiemansfield.lorenz.model.jar.MethodDescriptor;
+import me.jamiemansfield.lorenz.model.jar.signature.MethodSignature;
 import org.objectweb.asm.tree.ClassNode;
 
 class ClassNodeClassInfo extends InheritanceProvider.ClassInfo.Impl {
@@ -45,7 +45,7 @@ class ClassNodeClassInfo extends InheritanceProvider.ClassInfo.Impl {
                 .map(fieldNode -> fieldNode.name)
                 .forEach(this.fields::add);
         klass.methods.stream()
-                .map(methodNode -> new MethodDescriptor(methodNode.name, methodNode.desc))
+                .map(methodNode -> new MethodSignature(methodNode.name, methodNode.desc))
                 .forEach(this.methods::add);
     }
 

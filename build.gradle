@@ -26,6 +26,7 @@ archivesBaseName = project.name.toLowerCase()
 version = '0.2.0-SNAPSHOT'
 
 repositories {
+    mavenLocal() // todo: temp
     mavenCentral()
 }
 
@@ -37,7 +38,7 @@ dependencies {
     compile 'org.ow2.asm:asm-commons:6.0'
 
     // Mappings IO
-    compile 'me.jamiemansfield:lorenz:0.2.0'
+    compile 'me.jamiemansfield:lorenz:0.3.2'
 
     // CSV
     compile 'me.jamiemansfield:csv:0.1.0'

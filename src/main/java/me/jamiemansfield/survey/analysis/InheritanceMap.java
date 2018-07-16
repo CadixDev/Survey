@@ -30,7 +30,7 @@
 
 package me.jamiemansfield.survey.analysis;
 
-import me.jamiemansfield.lorenz.model.jar.MethodDescriptor;
+import me.jamiemansfield.lorenz.model.jar.signature.MethodSignature;
 import me.jamiemansfield.survey.jar.SourceSet;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -87,7 +87,7 @@ public class InheritanceMap {
         private final String superName;
         private final List<String> interfaces = new ArrayList<>();
         private final List<String> fields = new ArrayList<>();
-        private final List<MethodDescriptor> methods = new ArrayList<>();
+        private final List<MethodSignature> methods = new ArrayList<>();
 
         public ClassInfo(final ClassNode node) {
             this.name = node.name;
@@ -97,7 +97,7 @@ public class InheritanceMap {
                     .map(fieldNode -> fieldNode.name)
                     .forEach(this.fields::add);
             node.methods.stream()
-                    .map(methodNode -> new MethodDescriptor(methodNode.name, methodNode.desc))
+                    .map(methodNode -> new MethodSignature(methodNode.name, methodNode.desc))
                     .forEach(this.methods::add);
         }
 
@@ -142,7 +142,7 @@ public class InheritanceMap {
          *
          * @return The methods
          */
-        public List<MethodDescriptor> getMethods() {
+        public List<MethodSignature> getMethods() {
             return Collections.unmodifiableList(this.methods);
         }
 

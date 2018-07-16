@@ -30,7 +30,7 @@
 
 package me.jamiemansfield.survey.analysis;
 
-import me.jamiemansfield.lorenz.model.jar.MethodDescriptor;
+import me.jamiemansfield.lorenz.model.jar.signature.MethodSignature;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +51,7 @@ public interface InheritanceProvider {
 
         List<String> getFields();
 
-        List<MethodDescriptor> getMethods();
+        List<MethodSignature> getMethods();
 
         abstract class Impl implements ClassInfo {
 
@@ -59,7 +59,7 @@ public interface InheritanceProvider {
             protected final String superName;
             protected final List<String> interfaces = new ArrayList<>();
             protected final List<String> fields = new ArrayList<>();
-            protected final List<MethodDescriptor> methods = new ArrayList<>();
+            protected final List<MethodSignature> methods = new ArrayList<>();
 
             Impl(final String name, final String superName) {
                 this.name = name;
@@ -87,7 +87,7 @@ public interface InheritanceProvider {
             }
 
             @Override
-            public List<MethodDescriptor> getMethods() {
+            public List<MethodSignature> getMethods() {
                 return Collections.unmodifiableList(this.methods);
             }
 

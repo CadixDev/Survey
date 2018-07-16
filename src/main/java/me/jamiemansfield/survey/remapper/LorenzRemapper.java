@@ -32,7 +32,7 @@ package me.jamiemansfield.survey.remapper;
 
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.model.Mapping;
-import me.jamiemansfield.lorenz.model.jar.MethodDescriptor;
+import me.jamiemansfield.lorenz.model.jar.signature.MethodSignature;
 import me.jamiemansfield.survey.analysis.InheritanceMap;
 import org.objectweb.asm.commons.Remapper;
 
@@ -97,13 +97,13 @@ public class LorenzRemapper extends Remapper {
      * Gets a de-obfuscated method name, wrapped in an {@link Optional}, with respect to inheritance.
      *
      * @param owner The owner of the method
-     * @param descriptor The descriptor of the method
+     * @param signature The signature of the method
      * @return The de-obfuscated method name, wrapped in an {@link Optional}
      */
-    private Optional<String> getMethodMapping(final String owner, final MethodDescriptor descriptor) {
+    private Optional<String> getMethodMapping(final String owner, final MethodSignature signature) {
         // First, check the current class
         final Optional<String> methodName = this.mappings.getClassMapping(owner)
-                .flatMap(mapping -> mapping.getMethodMapping(descriptor)
+                .flatMap(mapping -> mapping.getMethodMapping(signature)
                         .map(Mapping::getDeobfuscatedName));
         if (methodName.isPresent()) return methodName;
 
@@ -118,7 +118,7 @@ public class LorenzRemapper extends Remapper {
             };
 
             for (final String parent : parents) {
-                final Optional<String> name = this.getMethodMapping(parent, descriptor);
+                final Optional<String> name = this.getMethodMapping(parent, signature);
                 if (name.isPresent()) return name;
             }
         }
@@ -129,7 +129,7 @@ public class LorenzRemapper extends Remapper {
 
     @Override
     public String mapMethodName(final String owner, final String name, final String desc) {
-        return this.getMethodMapping(owner, new MethodDescriptor(name, desc)).orElse(name);
+        return this.getMethodMapping(owner, new MethodSignature(name, desc)).orElse(name);
     }
 
 }
