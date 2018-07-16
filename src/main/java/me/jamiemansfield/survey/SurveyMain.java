@@ -45,6 +45,7 @@ import me.jamiemansfield.survey.analysis.SourceSetInheritanceProvider;
 import me.jamiemansfield.survey.jar.JarWalker;
 import me.jamiemansfield.survey.jar.SourceSet;
 import me.jamiemansfield.survey.mapper.IntermediaryMapper;
+import me.jamiemansfield.survey.mapper.IntermediaryMapperConfig;
 import me.jamiemansfield.survey.remapper.LorenzRemapper;
 import me.jamiemansfield.survey.util.PathValueConverter;
 
@@ -91,6 +92,9 @@ public final class SurveyMain {
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
         final OptionSpec<Path> mappingsOutPathSpec = parser.accepts("mappingsOut", "Where to save the intermediary mappings")
                 .requiredIf(intMapSpec)
+                .withOptionalArg()
+                .withValuesConvertedBy(PathValueConverter.INSTANCE);
+        final OptionSpec<Path> intMapConfigPathSpec = parser.accepts("intMapConfig", "Where to save the intermediary mappings")
                 .withOptionalArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
 
@@ -174,7 +178,24 @@ public final class SurveyMain {
                 }
             }
 
-            IntermediaryMapper.map(sources, mappings);
+            final IntermediaryMapperConfig config;
+
+            if (options.has(intMapConfigPathSpec)) {
+                final Path intMapConfigPath = options.valueOf(intMapConfigPathSpec);
+
+                if (Files.notExists(intMapConfigPath)) {
+                    throw new RuntimeException("Input mappings does not exist!");
+                }
+
+                config = IntermediaryMapperConfig.read(intMapConfigPath);
+            }
+            else {
+                config = IntermediaryMapperConfig.create();
+            }
+
+            new IntermediaryMapper(config, mappings, sources).map();
+
+            if (options.has(intMapConfigPathSpec)) config.save(options.valueOf(intMapConfigPathSpec));
 
             try (final MappingsWriter writer = mappingFormat.create(new PrintWriter(Files.newOutputStream(mappingsOutPath)))) {
                 writer.write(mappings);

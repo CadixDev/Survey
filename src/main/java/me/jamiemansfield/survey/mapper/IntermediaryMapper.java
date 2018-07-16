@@ -55,44 +55,55 @@ public class IntermediaryMapper {
     /**
      * A {@link Comparator} used to alphabetise a collection of {@link ClassNode}s.
      */
-    private static final Comparator<ClassNode> ALPHABETISE_CLASSES =
-            (o1, o2) -> o1.name.compareToIgnoreCase(o2.name);
+    private static final Comparator<ClassNode> ALPHABETISE_CLASSES = (o1, o2) -> o1.name.compareToIgnoreCase(o2.name);
 
     /**
      * A {@link Comparator} used to alphabetise a collection of {@link MethodSignature}s.
      */
-    private static final Comparator<MethodSignature> ALPHABETISE_METHODS =
-            (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName());
+    private static final Comparator<MethodSignature> ALPHABETISE_METHODS = (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName());
 
     private static final MethodSignature MAIN_METHOD = new MethodSignature("main", MethodDescriptor.compile("([Ljava/lang/String;)V"));
 
     private static final String FIELD_PREFIX = "field_";
     private static final String METHOD_PREFIX = "func_";
 
-    public static void map(final SourceSet sources, final MappingSet mappings) {
-        final IntermediaryMapper mapper = new IntermediaryMapper(mappings, sources);
-        // First pass
-        sources.getClasses().stream()
-                .sorted(ALPHABETISE_CLASSES)
-                .forEach(node -> mapper.map(node, true));
-        // Second pass
-        sources.getClasses()
-                .forEach(node -> mapper.map(node, false));
-    }
-
+    private final IntermediaryMapperConfig config;
     private final MappingSet mappings;
+    private final SourceSet sources;
     private final InheritanceProvider inheritance;
 
-    private final AtomicInteger count = new AtomicInteger();
+    private final AtomicInteger count;
 
-    private IntermediaryMapper(final MappingSet mappings, final SourceSet sources) {
+    public IntermediaryMapper(final IntermediaryMapperConfig config, final MappingSet mappings, final SourceSet sources) {
+        this.config = config;
         this.mappings = mappings;
+        this.sources = sources;
         this.inheritance = new CascadingInheritanceProvider()
                 .install(new SourceSetInheritanceProvider(sources))
                 .install(new ClassLoaderInheritanceProvider(IntermediaryMapper.class.getClassLoader()));
+
+        this.count = new AtomicInteger(config.getNextMember());
+    }
+
+    public void map() {
+        // First pass
+        this.sources.getClasses().stream()
+                .sorted(ALPHABETISE_CLASSES)
+                .forEach(node -> this.map(node, true));
+        // Second pass
+        sources.getClasses()
+                .forEach(node -> this.map(node, false));
+
+        // Set last member in config
+        this.config.setNextMember(this.count.get());
     }
 
     public void map(final ClassNode klass, final boolean firstPass) {
+        // Exclude configured packages
+        for (final String excludedPackage : this.config.getExcludedPackages()) {
+            if (klass.name.startsWith(excludedPackage.replace('.', '/'))) return;
+        }
+
         if (firstPass) this.inheritance.provide(klass.name).ifPresent(info -> this.map0(info, klass));
         else this.inheritance.provide(klass.name).ifPresent(info -> this.map1(info, klass));
     }
