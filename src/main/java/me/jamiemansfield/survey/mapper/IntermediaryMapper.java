@@ -52,6 +52,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -75,6 +76,7 @@ public class IntermediaryMapper {
     private static final String METHOD_PREFIX = "func_";
 
     public static void main(final String[] args) {
+
         final SourceSet sources = new SourceSet();
         final MappingSet mappings = MappingSet.create();
         new JarWalker(Paths.get("joined.jar")).walk(sources);
@@ -178,7 +180,7 @@ public class IntermediaryMapper {
         final FieldMapping mapping = classMapping.getOrCreateFieldMapping(fieldName);
 
         if (fieldName.startsWith(FIELD_PREFIX) ||
-                // these are really annoying :(
+                // inner classes, lambdas, etc
                 fieldName.startsWith("this$") || fieldName.startsWith("val$") || fieldName.equalsIgnoreCase("$VALUES") ||
                 mapping.hasDeobfuscatedName()) return mapping;
 
@@ -188,12 +190,23 @@ public class IntermediaryMapper {
     private MethodMapping mapMethod(final ClassMapping classMapping, final MethodSignature signature, final ClassNode klass) {
         final MethodMapping mapping = classMapping.getOrCreateMethodMapping(signature);
 
-        // todo: generics
+        final boolean isEnum = Objects.equals(klass.superName, "java/lang/Enum");
+        final MethodSignature enumValueOf = new MethodSignature(
+                "valueOf",
+                MethodDescriptor.compile("(Ljava/lang/String;)L" + klass.name + ";")
+        );
+        final MethodSignature enumValues = new MethodSignature(
+                "values",
+                MethodDescriptor.compile("()[L" + klass.name + ";")
+        );
+
         if (signature.getName().startsWith(METHOD_PREFIX) ||
                 // constructors and static inits
                 signature.getName().equalsIgnoreCase("<init>") || signature.getName().equalsIgnoreCase("<clinit>") ||
-                // these are really annoying :(
+                // inner classes, lambdas, etc
                 signature.getName().startsWith("lambda$") || signature.getName().startsWith("access$") ||
+                // Enums
+                (isEnum && (signature.equals(enumValueOf) || signature.equals(enumValues))) ||
                 signature.equals(MAIN_METHOD) ||
                 mapping.hasDeobfuscatedName()) return mapping;
 
