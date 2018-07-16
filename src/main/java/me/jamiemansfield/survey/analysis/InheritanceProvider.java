@@ -35,10 +35,11 @@ import me.jamiemansfield.lorenz.model.jar.MethodDescriptor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public interface InheritanceProvider {
 
-    ClassInfo provide(final String klass);
+    Optional<ClassInfo> provide(final String klass);
 
     interface ClassInfo {
 

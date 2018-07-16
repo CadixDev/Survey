@@ -30,28 +30,39 @@
 
 package me.jamiemansfield.survey.analysis;
 
-public class ClasspathInheritanceProvider implements InheritanceProvider {
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.common.io.ByteStreams;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
 
-    //private final LoadingCache<String, Class>;
+import java.io.InputStream;
+import java.util.Optional;
 
-    @Override
-    public ClassInfo provide(final String klass) {
-        return null;
+public class ClassLoaderInheritanceProvider implements InheritanceProvider {
+
+    private final LoadingCache<String, ClassInfo> cache;
+
+    public ClassLoaderInheritanceProvider(final ClassLoader classLoader) {
+        this.cache = Caffeine.newBuilder()
+                .build(key -> {
+                    final String internalName = key + ".class";
+
+                    try (final InputStream in = classLoader.getResourceAsStream(internalName)) {
+                        if (in == null) return null;
+
+                        final ClassReader reader = new ClassReader(ByteStreams.toByteArray(in));
+                        final ClassNode node = new ClassNode();
+                        reader.accept(node, 0);
+
+                        return new ClassNodeClassInfo(node);
+                    }
+                });
     }
 
-}
-
-class ClasspathClassInfo extends InheritanceProvider.ClassInfo.Impl {
-
-    ClasspathClassInfo(final Class klass) {
-        super(
-                // Name
-                klass.getName(),
-                // Super Class Name
-                klass.getSuperclass() != null ?
-                        klass.getSuperclass().getName() :
-                        null
-        );
+    @Override
+    public Optional<ClassInfo> provide(final String klass) {
+        return Optional.ofNullable(this.cache.get(klass));
     }
 
 }

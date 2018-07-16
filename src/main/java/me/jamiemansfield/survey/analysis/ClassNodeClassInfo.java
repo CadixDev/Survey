@@ -30,31 +30,23 @@
 
 package me.jamiemansfield.survey.analysis;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
-import me.jamiemansfield.survey.jar.SourceSet;
+import me.jamiemansfield.lorenz.model.jar.MethodDescriptor;
+import org.objectweb.asm.tree.ClassNode;
 
-import java.util.Optional;
+class ClassNodeClassInfo extends InheritanceProvider.ClassInfo.Impl {
 
-public class SourceSetInheritanceProvider implements InheritanceProvider {
-
-    private final LoadingCache<String, ClassInfo> cache;
-
-    public SourceSetInheritanceProvider(final SourceSet sources) {
-        this.cache = Caffeine.newBuilder()
-                .build(key -> {
-                    if (sources.has(key)) {
-                        return new ClassNodeClassInfo(sources.get(key));
-                    }
-                    else {
-                        return null;
-                    }
-                });
-    }
-
-    @Override
-    public Optional<ClassInfo> provide(final String klass) {
-        return Optional.ofNullable(this.cache.get(klass));
+    ClassNodeClassInfo(final ClassNode klass) {
+        super(
+                klass.name,
+                klass.superName
+        );
+        this.interfaces.addAll(klass.interfaces);
+        klass.fields.stream()
+                .map(fieldNode -> fieldNode.name)
+                .forEach(this.fields::add);
+        klass.methods.stream()
+                .map(methodNode -> new MethodDescriptor(methodNode.name, methodNode.desc))
+                .forEach(this.methods::add);
     }
 
 }
