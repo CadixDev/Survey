@@ -35,10 +35,13 @@ import me.jamiemansfield.lorenz.model.Mapping;
 import me.jamiemansfield.lorenz.model.jar.signature.MethodSignature;
 import me.jamiemansfield.survey.analysis.InheritanceProvider;
 import org.objectweb.asm.commons.Remapper;
+import org.objectweb.asm.commons.SignatureRemapper;
+import org.objectweb.asm.signature.SignatureVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Stack;
 
 /**
  * A simple implementation of {@link Remapper} to remap based
@@ -130,6 +133,54 @@ public class LorenzRemapper extends Remapper {
     @Override
     public String mapMethodName(final String owner, final String name, final String desc) {
         return this.getMethodMapping(owner, new MethodSignature(name, desc)).orElse(name);
+    }
+
+    @Override
+    protected SignatureVisitor createSignatureRemapper(final SignatureVisitor v) {
+        return new ProguardSignatureFixer(v, this);
+    }
+
+    /**
+     * Proguard has a problem where it will sometimes incorrectly output a method signature.
+     * It will put the fully qualified obf name for the inner instead of the inner name.
+     * So here we try and detect and fix that.
+     * Example:
+     *   Bad:  (TK;)Lzt<TK;TT;TR;>.zt$a;
+     *   Good: (TK;)Lzt<TK;TT;TR;>.a;
+     */
+    static class ProguardSignatureFixer extends SignatureRemapper {
+
+        private Stack<String> classNames = new Stack<>();
+
+        private ProguardSignatureFixer(final SignatureVisitor sv, final Remapper m) {
+            super(sv, m);
+        }
+
+        @Override
+        public void visitClassType(final String name) {
+            this.classNames.push(name);
+            super.visitClassType(name);
+        }
+
+        @Override
+        public void visitInnerClassType(String name) {
+            final String outerClassName = this.classNames.pop();
+
+            if (name.startsWith(outerClassName + '$')) {
+                name = name.substring(outerClassName.length() + 1);
+            }
+
+            final String className = outerClassName + '$' + name;
+            this.classNames.push(className);
+            super.visitInnerClassType(name);
+        }
+
+        @Override
+        public void visitEnd() {
+            this.classNames.pop();
+            super.visitEnd();
+        }
+
     }
 
 }

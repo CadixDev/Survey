@@ -15,7 +15,6 @@ apply plugin: 'maven'
 if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
     apply plugin: 'signing'
 }
-apply plugin: 'net.minecrell.licenser'
 apply plugin: 'com.github.johnrengelman.plugin-shadow'
 
 sourceCompatibility = '1.8'
@@ -44,10 +43,6 @@ dependencies {
 
     // Caching
     compile 'com.github.ben-manes.caffeine:caffeine:2.6.2'
-}
-
-license {
-    header = project.file('HEADER.txt')
 }
 
 processResources {

@@ -91,7 +91,20 @@ public final class SurveyTool {
 
                 for (final ClassNode node : sources.getClasses()) {
                     final ClassNode newNode = new ClassNode();
-                    node.accept(new ClassRemapper(newNode, remapper));
+                    node.accept(new ClassRemapper(newNode, remapper) {
+                        @Override
+                        public void visitInnerClass(final String name, final String outerName, final String innerName, final int access) {
+                            // We need to change the inner name as ASM doesn't
+                            final String mappedName = this.remapper.map(name);
+                            super.visitInnerClass(
+                                    name,
+                                    outerName,
+                                    // This check is for anonymous classes
+                                    innerName == null ? null : mappedName.substring(mappedName.lastIndexOf('$') + 1),
+                                    access
+                            );
+                        }
+                    });
 
                     final ClassWriter writer = new ClassWriter(0);
                     newNode.accept(writer);
