@@ -36,6 +36,13 @@ import me.jamiemansfield.survey.jar.SourceSet;
 
 import java.util.Optional;
 
+/**
+ * An {@link InheritanceProvider} that obtains all of its information
+ * from a given {@link SourceSet}.
+ *
+ * @author Jamie Mansfield
+ * @since 0.2.0
+ */
 public class SourceSetInheritanceProvider implements InheritanceProvider {
 
     private final LoadingCache<String, ClassInfo> cache;

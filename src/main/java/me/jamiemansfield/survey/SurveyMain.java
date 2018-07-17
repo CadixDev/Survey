@@ -131,7 +131,7 @@ public final class SurveyMain {
             }
 
             new SurveyMapper()
-                    .loadMappings(mappingsPath, mappingFormat.getReaderConstructor())
+                    .loadMappings(mappingsPath, mappingFormat::create)
                     .remap(jarInPath, jarOutPath);
         }
         else if (options.has(intMapSpec)) {

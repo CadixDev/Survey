@@ -39,6 +39,13 @@ import org.objectweb.asm.tree.ClassNode;
 import java.io.InputStream;
 import java.util.Optional;
 
+/**
+ * An {@link InheritanceProvider} that obtains all of its information
+ * from a given {@link ClassLoader}.
+ *
+ * @author Jamie Mansfield
+ * @since 0.2.0
+ */
 public class ClassLoaderInheritanceProvider implements InheritanceProvider {
 
     private final LoadingCache<String, ClassInfo> cache;
@@ -51,6 +58,9 @@ public class ClassLoaderInheritanceProvider implements InheritanceProvider {
                     try (final InputStream in = classLoader.getResourceAsStream(internalName)) {
                         if (in == null) return null;
 
+                        // I read the class using ASM as getting the information required using
+                        // reflection is awkward.
+                        // Additionally, it allows me to share code - which is always a positive!
                         final ClassReader reader = new ClassReader(ByteStreams.toByteArray(in));
                         final ClassNode node = new ClassNode();
                         reader.accept(node, 0);

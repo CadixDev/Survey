@@ -33,6 +33,13 @@ package me.jamiemansfield.survey.analysis;
 import me.jamiemansfield.lorenz.model.jar.signature.MethodSignature;
 import org.objectweb.asm.tree.ClassNode;
 
+/**
+ * An implementation of {@link InheritanceProvider.ClassInfo} using data
+ * obtained through a {@link ClassNode}.
+ *
+ * @author Jamie Mansfield
+ * @since 0.2.0
+ */
 class ClassNodeClassInfo extends InheritanceProvider.ClassInfo.Impl {
 
     ClassNodeClassInfo(final ClassNode klass) {

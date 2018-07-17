@@ -79,24 +79,6 @@ public enum MappingFormat {
     }
 
     /**
-     * Gets a function that represents the constructor of a {@link MappingsReader}.
-     *
-     * @return The reader constructor
-     */
-    public Function<BufferedReader, MappingsReader> getReaderConstructor() {
-        return this.readerConstructor;
-    }
-
-    /**
-     * Gets a function that represents the constructor of a {@link MappingsWriter}.
-     *
-     * @return The writer constructor
-     */
-    public Function<PrintWriter, MappingsWriter> getWriterConstructor() {
-        return this.writerConstructor;
-    }
-
-    /**
      * Creates a mapping reader for the given format.
      *
      * @param reader The reader to use for construction

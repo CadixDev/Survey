@@ -37,6 +37,9 @@ import java.util.Optional;
 /**
  * A cascading {@link InheritanceProvider} allows for class information to be
  * pooled from multiple sources.
+ *
+ * @author Jamie Mansfield
+ * @since 0.2.0
  */
 public class CascadingInheritanceProvider implements InheritanceProvider {
 
@@ -50,6 +53,13 @@ public class CascadingInheritanceProvider implements InheritanceProvider {
         this.providers = new ArrayList<>();
     }
 
+    /**
+     * Adds an {@link InheritanceProvider} that can be used for obtaining class
+     * information.
+     *
+     * @param provider The inheritance provider
+     * @return {@code this}, for chaining
+     */
     public CascadingInheritanceProvider install(final InheritanceProvider provider) {
         this.providers.add(provider);
         return this;
