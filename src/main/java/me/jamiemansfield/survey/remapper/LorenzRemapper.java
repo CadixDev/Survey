@@ -81,10 +81,20 @@ public class LorenzRemapper extends Remapper {
                         .map(Mapping::getDeobfuscatedName));
         if (fieldName.isPresent()) return fieldName;
 
-        // Now, check the parent class
+        // Now, check parent classes and interfaces
         final Optional<InheritanceProvider.ClassInfo> info = this.inheritance.provide(owner);
-        if (info.isPresent() && info.get().getSuperName() != null) {
-            return this.getFieldMapping(info.get().getSuperName(), name);
+        if (info.isPresent()) {
+            final List<String> parents = new ArrayList<String>() {
+                {
+                    if (info.get().getSuperName() != null) this.add(info.get().getSuperName());
+                    this.addAll(info.get().getInterfaces());
+                }
+            };
+
+            for (final String parent : parents) {
+                final Optional<String> mapping = this.getFieldMapping(parent, name);
+                if (mapping.isPresent()) return mapping;
+            }
         }
 
         // The field seemingly has no mapping
