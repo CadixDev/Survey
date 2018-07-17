@@ -48,8 +48,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * An intermediary mapper, that can produce version-agnostic mappings for a
+ * given jar.
+ *
+ * @author Jamie Mansfield
+ * @since 0.2.0
+ */
 public class IntermediaryMapper {
 
     /**
@@ -64,15 +70,10 @@ public class IntermediaryMapper {
 
     private static final MethodSignature MAIN_METHOD = new MethodSignature("main", MethodDescriptor.compile("([Ljava/lang/String;)V"));
 
-    private static final String FIELD_PREFIX = "field_";
-    private static final String METHOD_PREFIX = "func_";
-
     private final IntermediaryMapperConfig config;
     private final MappingSet mappings;
     private final SourceSet sources;
     private final InheritanceProvider inheritance;
-
-    private final AtomicInteger count;
 
     public IntermediaryMapper(final IntermediaryMapperConfig config, final MappingSet mappings, final SourceSet sources) {
         this.config = config;
@@ -81,8 +82,6 @@ public class IntermediaryMapper {
         this.inheritance = new CascadingInheritanceProvider()
                 .install(new SourceSetInheritanceProvider(sources))
                 .install(new ClassLoaderInheritanceProvider(IntermediaryMapper.class.getClassLoader()));
-
-        this.count = new AtomicInteger(config.getNextMember());
     }
 
     public void map() {
@@ -93,9 +92,6 @@ public class IntermediaryMapper {
         // Second pass
         sources.getClasses()
                 .forEach(node -> this.map(node, false));
-
-        // Set last member in config
-        this.config.setNextMember(this.count.get());
     }
 
     public void map(final ClassNode klass, final boolean firstPass) {
@@ -172,12 +168,12 @@ public class IntermediaryMapper {
     private FieldMapping mapField(final ClassMapping classMapping, final String fieldName) {
         final FieldMapping mapping = classMapping.getOrCreateFieldMapping(fieldName);
 
-        if (fieldName.startsWith(FIELD_PREFIX) ||
+        if (fieldName.startsWith(this.config.getFieldPrefix()) ||
                 // inner classes, lambdas, etc
                 fieldName.startsWith("this$") || fieldName.startsWith("val$") || fieldName.equalsIgnoreCase("$VALUES") ||
                 mapping.hasDeobfuscatedName()) return mapping;
 
-        return mapping.setDeobfuscatedName(FIELD_PREFIX + this.count.getAndIncrement() + "_" + fieldName);
+        return mapping.setDeobfuscatedName(this.config.getFieldPrefix() + this.config.getAndIncrementNextMember() + "_" + fieldName);
     }
 
     private MethodMapping mapMethod(final ClassMapping classMapping, final MethodSignature signature, final ClassNode klass) {
@@ -193,7 +189,7 @@ public class IntermediaryMapper {
                 MethodDescriptor.compile("()[L" + klass.name + ";")
         );
 
-        if (signature.getName().startsWith(METHOD_PREFIX) ||
+        if (signature.getName().startsWith(this.config.getMethodPrefix()) ||
                 // constructors and static inits
                 signature.getName().equalsIgnoreCase("<init>") || signature.getName().equalsIgnoreCase("<clinit>") ||
                 // inner classes, lambdas, etc
@@ -203,7 +199,7 @@ public class IntermediaryMapper {
                 signature.equals(MAIN_METHOD) ||
                 mapping.hasDeobfuscatedName()) return mapping;
 
-        return mapping.setDeobfuscatedName(METHOD_PREFIX + this.count.getAndIncrement() + "_" + signature.getName());
+        return mapping.setDeobfuscatedName(this.config.getMethodPrefix() + this.config.getAndIncrementNextMember() + "_" + signature.getName());
     }
 
 }
