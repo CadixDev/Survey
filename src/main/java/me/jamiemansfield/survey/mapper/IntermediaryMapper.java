@@ -97,7 +97,7 @@ public class IntermediaryMapper {
     public void map(final ClassNode klass, final boolean firstPass) {
         // Exclude configured packages
         for (final String excludedPackage : this.config.getExcludedPackages()) {
-            if (klass.name.startsWith(excludedPackage.replace('.', '/'))) return;
+            if (!excludedPackage.isEmpty() && klass.name.startsWith(excludedPackage.replace('.', '/'))) return;
         }
 
         if (firstPass) this.inheritance.provide(klass.name).ifPresent(info -> this.map0(info, klass));

@@ -163,7 +163,7 @@ public final class SurveyMain {
                 final Path intMapConfigPath = options.valueOf(intMapConfigPathSpec);
 
                 if (Files.notExists(intMapConfigPath)) {
-                    throw new RuntimeException("Input mappings does not exist!");
+                    throw new RuntimeException("Input configuration does not exist!");
                 }
 
                 config = IntermediaryMapperConfig.read(intMapConfigPath);
