@@ -34,15 +34,20 @@ import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.model.ClassMapping;
 import me.jamiemansfield.lorenz.model.FieldMapping;
 import me.jamiemansfield.lorenz.model.MethodMapping;
+import me.jamiemansfield.lorenz.model.jar.ArrayType;
 import me.jamiemansfield.lorenz.model.jar.MethodDescriptor;
+import me.jamiemansfield.lorenz.model.jar.Type;
 import me.jamiemansfield.lorenz.model.jar.signature.MethodSignature;
 import me.jamiemansfield.survey.analysis.CascadingInheritanceProvider;
 import me.jamiemansfield.survey.analysis.ClassLoaderInheritanceProvider;
 import me.jamiemansfield.survey.analysis.InheritanceProvider;
 import me.jamiemansfield.survey.analysis.SourceSetInheritanceProvider;
 import me.jamiemansfield.survey.jar.SourceSet;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -85,23 +90,24 @@ public class IntermediaryMapper {
     }
 
     public void map() {
-        // First pass
-        this.sources.getClasses().stream()
+        sources.getClasses().stream()
+                // Exclude configured packages
+                .filter(klass -> this.config.getExcludedPackages().stream()
+                        .filter(pkg -> !pkg.isEmpty())
+                        .noneMatch(pkg -> klass.name.startsWith(pkg.replace('.', '/'))))
+                // Do the classes in order
                 .sorted(ALPHABETISE_CLASSES)
-                .forEach(node -> this.map(node, true));
-        // Second pass
-        sources.getClasses()
-                .forEach(node -> this.map(node, false));
-    }
+                // Complete the passes
+                .forEach(klass -> {
+                    // Grab inheritance information
+                    this.inheritance.provide(klass.name).ifPresent(info -> {
+                        // First pass
+                        this.map0(info, klass);
 
-    public void map(final ClassNode klass, final boolean firstPass) {
-        // Exclude configured packages
-        for (final String excludedPackage : this.config.getExcludedPackages()) {
-            if (!excludedPackage.isEmpty() && klass.name.startsWith(excludedPackage.replace('.', '/'))) return;
-        }
-
-        if (firstPass) this.inheritance.provide(klass.name).ifPresent(info -> this.map0(info, klass));
-        else this.inheritance.provide(klass.name).ifPresent(info -> this.map1(info, klass));
+                        // Second pass
+                        this.map1(info, klass);
+                    });
+                });
     }
 
     private void map0(final InheritanceProvider.ClassInfo info, final ClassNode klass) {
@@ -110,7 +116,7 @@ public class IntermediaryMapper {
         // Map field mappings
         info.getFields().stream()
                 .sorted(String::compareToIgnoreCase)
-                .forEach(field -> this.mapField(mapping, field));
+                .forEach(field -> this.mapField(mapping, field, klass));
 
         // Map method mappings
         info.getMethods().stream()
@@ -165,8 +171,20 @@ public class IntermediaryMapper {
         return this.getMethodParent(klass, method).isPresent();
     }
 
-    private FieldMapping mapField(final ClassMapping classMapping, final String fieldName) {
+    private FieldMapping mapField(final ClassMapping classMapping, final String fieldName, final ClassNode klass) {
         final FieldMapping mapping = classMapping.getOrCreateFieldMapping(fieldName);
+
+        final FieldNode field = klass.fields.stream()
+                .filter(node -> Objects.equals(node.name, fieldName)).findAny()
+                .orElse(null);
+        if (field == null) return mapping; // This should NEVER happen
+
+        // Some obfuscators will remap synthetic fields, such as $VALUES in enums
+        final boolean isEnum = Objects.equals(klass.superName, "java/lang/Enum");
+        final boolean isSynthetic = (field.access & Opcodes.ACC_SYNTHETIC) != 0;
+        final Type valuesType = new ArrayType(1, Type.of(klass.name));
+        if (isEnum && isSynthetic && valuesType.equals(Type.of(klass.name)))
+            return mapping.setDeobfuscatedName("$VALUES");
 
         if (fieldName.startsWith(this.config.getFieldPrefix()) ||
                 // inner classes, lambdas, etc
@@ -196,6 +214,9 @@ public class IntermediaryMapper {
                 signature.getName().startsWith("lambda$") || signature.getName().startsWith("access$") ||
                 // Enums
                 (isEnum && (signature.equals(enumValueOf) || signature.equals(enumValues))) ||
+                // Native methods should never be changed!
+                Modifier.isNative(klass.access) ||
+                // Main method
                 signature.equals(MAIN_METHOD) ||
                 mapping.hasDeobfuscatedName()) return mapping;
 
