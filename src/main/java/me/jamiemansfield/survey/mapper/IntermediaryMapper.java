@@ -123,6 +123,8 @@ public class IntermediaryMapper {
     }
 
     private void mapEnumFields(final ClassNode klass, final EnumMappingMethodVisitor enumMapper) {
+        if (!this.config.shouldMapFields()) return;
+
         klass.methods.stream()
                 .filter(method -> new MethodSignature(method.name, method.desc).equals(STATIC_INIT))
                 .forEach(method -> method.accept(enumMapper));
@@ -197,7 +199,7 @@ public class IntermediaryMapper {
         final FieldNode field = klass.fields.stream()
                 .filter(node -> Objects.equals(node.name, fieldName)).findAny()
                 .orElse(null);
-        if (field == null) return mapping; // This should NEVER happen
+        if (field == null || !this.config.shouldMapFields()) return mapping;
 
         // Some obfuscators will remap synthetic fields, such as $VALUES in enums
         final boolean isEnum = Objects.equals(klass.superName, "java/lang/Enum");
@@ -221,7 +223,7 @@ public class IntermediaryMapper {
                 .filter(node -> Objects.equals(node.name, signature.getName()) &&
                         Objects.equals(node.desc, signature.getDescriptor().getObfuscated())).findAny()
                 .orElse(null);
-        if (method == null) return mapping; // This should NEVER happen
+        if (method == null || !this.config.shouldMapMethods()) return mapping;
 
         final boolean isEnum = Objects.equals(klass.superName, "java/lang/Enum");
         final MethodSignature enumValueOf = new MethodSignature(

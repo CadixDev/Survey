@@ -56,6 +56,8 @@ public class IntermediaryMapperConfig {
     private static final String EXCLUDED_PACKAGES = "excluded-packages";
     private static final String FIELD_PREFIX = "field-prefix";
     private static final String METHOD_PREFIX = "method-prefix";
+    private static final String MAP_FIELDS = "map-fields";
+    private static final String MAP_METHODS = "map-methods";
 
     private static Properties DEFAULTS = new Properties();
 
@@ -64,6 +66,8 @@ public class IntermediaryMapperConfig {
         DEFAULTS.setProperty(EXCLUDED_PACKAGES, "");
         DEFAULTS.setProperty(FIELD_PREFIX, "field_");
         DEFAULTS.setProperty(METHOD_PREFIX, "func_");
+        DEFAULTS.setProperty(MAP_FIELDS, "true");
+        DEFAULTS.setProperty(MAP_METHODS, "true");
     }
 
     /**
@@ -96,12 +100,16 @@ public class IntermediaryMapperConfig {
     private final List<String> excludedPackages = new ArrayList<>();
     private final String fieldPrefix;
     private final String methodPrefix;
+    private final boolean mapFields;
+    private final boolean mapMethods;
 
     public IntermediaryMapperConfig(final Properties props) {
         this.nextMember = Integer.valueOf(props.getProperty(NEXT_MEMBER));
         this.excludedPackages.addAll(Arrays.asList(props.getProperty(EXCLUDED_PACKAGES).split(",")));
         this.fieldPrefix = props.getProperty(FIELD_PREFIX);
         this.methodPrefix = props.getProperty(METHOD_PREFIX);
+        this.mapFields = Boolean.parseBoolean(props.getProperty(MAP_FIELDS));
+        this.mapMethods = Boolean.parseBoolean(props.getProperty(MAP_METHODS));
     }
 
     /**
@@ -162,6 +170,24 @@ public class IntermediaryMapperConfig {
     }
 
     /**
+     * Gets whether fields should be mapped by Survey.
+     *
+     * @return {@code true} if fields should be mapped; {@code false} otherwise
+     */
+    public boolean shouldMapFields() {
+        return this.mapFields;
+    }
+
+    /**
+     * Gets whether methods should be mapped by Survey.
+     *
+     * @return {@code true} if methods should be mapped; {@code false} otherwise
+     */
+    public boolean shouldMapMethods() {
+        return this.mapMethods;
+    }
+
+    /**
      * Saves the configuration to the given {@link Path}.
      *
      * @param configPath The path to save the configuration to
@@ -173,6 +199,8 @@ public class IntermediaryMapperConfig {
             props.setProperty(EXCLUDED_PACKAGES, this.excludedPackages.stream().collect(Collectors.joining(",")));
             props.setProperty(FIELD_PREFIX, this.fieldPrefix);
             props.setProperty(METHOD_PREFIX, this.methodPrefix);
+            props.setProperty(MAP_FIELDS, Boolean.toString(this.mapFields));
+            props.setProperty(MAP_METHODS, Boolean.toString(this.mapMethods));
             props.store(out, "Configuration options for Survey's intermediary mapper");
         }
         catch (final IOException ignored) {
