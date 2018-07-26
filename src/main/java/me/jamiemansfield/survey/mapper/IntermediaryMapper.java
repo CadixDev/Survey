@@ -46,6 +46,7 @@ import me.jamiemansfield.survey.jar.SourceSet;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -197,6 +198,12 @@ public class IntermediaryMapper {
     private MethodMapping mapMethod(final ClassMapping classMapping, final MethodSignature signature, final ClassNode klass) {
         final MethodMapping mapping = classMapping.getOrCreateMethodMapping(signature);
 
+        final MethodNode method = klass.methods.stream()
+                .filter(node -> Objects.equals(node.name, signature.getName()) &&
+                        Objects.equals(node.desc, signature.getDescriptor().getObfuscated())).findAny()
+                .orElse(null);
+        if (method == null) return mapping; // This should NEVER happen
+
         final boolean isEnum = Objects.equals(klass.superName, "java/lang/Enum");
         final MethodSignature enumValueOf = new MethodSignature(
                 "valueOf",
@@ -215,7 +222,7 @@ public class IntermediaryMapper {
                 // Enums
                 (isEnum && (signature.equals(enumValueOf) || signature.equals(enumValues))) ||
                 // Native methods should never be changed!
-                Modifier.isNative(klass.access) ||
+                Modifier.isNative(method.access) ||
                 // Main method
                 signature.equals(MAIN_METHOD) ||
                 mapping.hasDeobfuscatedName()) return mapping;

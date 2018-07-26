@@ -54,7 +54,15 @@ import java.util.function.Function;
  */
 public class SurveyMapper {
 
-    private final MappingSet mappings = MappingSet.create();
+    private final MappingSet mappings;
+
+    public SurveyMapper(final MappingSet mappings) {
+        this.mappings = mappings;
+    }
+
+    public SurveyMapper() {
+        this(MappingSet.create());
+    }
 
     /**
      * Loads mappings from the given path, using the given reader.
