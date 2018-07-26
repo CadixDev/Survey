@@ -30,6 +30,8 @@
 
 package me.jamiemansfield.survey.mapper;
 
+import static org.objectweb.asm.Opcodes.ASM6;
+
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.model.ClassMapping;
 import me.jamiemansfield.lorenz.model.FieldMapping;
@@ -43,6 +45,7 @@ import me.jamiemansfield.survey.analysis.ClassLoaderInheritanceProvider;
 import me.jamiemansfield.survey.analysis.InheritanceProvider;
 import me.jamiemansfield.survey.analysis.SourceSetInheritanceProvider;
 import me.jamiemansfield.survey.jar.SourceSet;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -75,6 +78,7 @@ public class IntermediaryMapper {
     private static final Comparator<MethodSignature> ALPHABETISE_METHODS = (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName());
 
     private static final MethodSignature MAIN_METHOD = new MethodSignature("main", MethodDescriptor.compile("([Ljava/lang/String;)V"));
+    private static final MethodSignature STATIC_INIT = new MethodSignature("<clinit>", MethodDescriptor.compile("()V"));
 
     private final IntermediaryMapperConfig config;
     private final MappingSet mappings;
@@ -91,6 +95,8 @@ public class IntermediaryMapper {
     }
 
     public void map() {
+        final EnumMappingMethodVisitor enumMapper = new EnumMappingMethodVisitor(null, this.mappings);
+
         sources.getClasses().stream()
                 // Exclude configured packages
                 .filter(klass -> this.config.getExcludedPackages().stream()
@@ -100,6 +106,11 @@ public class IntermediaryMapper {
                 .sorted(ALPHABETISE_CLASSES)
                 // Complete the passes
                 .forEach(klass -> {
+                    // Map enum fields
+                    if (Objects.equals(klass.superName, "java/lang/Enum")) {
+                        this.mapEnumFields(klass, enumMapper);
+                    }
+
                     // Grab inheritance information
                     this.inheritance.provide(klass.name).ifPresent(info -> {
                         // First pass
@@ -109,6 +120,12 @@ public class IntermediaryMapper {
                         this.map1(info, klass);
                     });
                 });
+    }
+
+    private void mapEnumFields(final ClassNode klass, final EnumMappingMethodVisitor enumMapper) {
+        klass.methods.stream()
+                .filter(method -> new MethodSignature(method.name, method.desc).equals(STATIC_INIT))
+                .forEach(method -> method.accept(enumMapper));
     }
 
     private void map0(final InheritanceProvider.ClassInfo info, final ClassNode klass) {
@@ -137,6 +154,7 @@ public class IntermediaryMapper {
             // methods from this class were handled in the first pass
             if (!this.isMethodFromParent(info, method)) return;
 
+            // Remap the method in child classes
             this.getMethodParent(info, method).ifPresent(parentKlass -> {
                 this.mappings.getClassMapping(parentKlass.getName()).ifPresent(parentMapping -> {
                     parentMapping.getMethodMapping(method).ifPresent(methodMapping -> {
@@ -174,6 +192,7 @@ public class IntermediaryMapper {
 
     private FieldMapping mapField(final ClassMapping classMapping, final String fieldName, final ClassNode klass) {
         final FieldMapping mapping = classMapping.getOrCreateFieldMapping(fieldName);
+        final Type klassType = Type.of("L" + klass.name + ";");
 
         final FieldNode field = klass.fields.stream()
                 .filter(node -> Objects.equals(node.name, fieldName)).findAny()
@@ -183,8 +202,8 @@ public class IntermediaryMapper {
         // Some obfuscators will remap synthetic fields, such as $VALUES in enums
         final boolean isEnum = Objects.equals(klass.superName, "java/lang/Enum");
         final boolean isSynthetic = (field.access & Opcodes.ACC_SYNTHETIC) != 0;
-        final Type valuesType = new ArrayType(1, Type.of(klass.name));
-        if (isEnum && isSynthetic && valuesType.equals(Type.of(klass.name)))
+        final Type valuesType = new ArrayType(1, klassType);
+        if (isEnum && isSynthetic && valuesType.equals(Type.of(field.desc)))
             return mapping.setDeobfuscatedName("$VALUES");
 
         if (fieldName.startsWith(this.config.getFieldPrefix()) ||
@@ -228,6 +247,57 @@ public class IntermediaryMapper {
                 mapping.hasDeobfuscatedName()) return mapping;
 
         return mapping.setDeobfuscatedName(this.config.getMethodPrefix() + this.config.getAndIncrementNextMember() + "_" + signature.getName());
+    }
+
+    /**
+     * A {@link MethodVisitor} to find de-obfuscation mappings for enums, through
+     * non-obfuscated values left for {@code "#valueOf(String)"}.
+     */
+    public static class EnumMappingMethodVisitor extends MethodVisitor {
+
+        private final MappingSet mappings;
+        private boolean incomingName = false;
+        private String name = null;
+
+        public EnumMappingMethodVisitor(final MethodVisitor mv, final MappingSet mappings) {
+            super(ASM6, mv);
+            this.mappings = mappings;
+        }
+
+        @Override
+        public void visitTypeInsn(int opcode, String type) {
+            if (opcode == Opcodes.NEW) {
+                this.incomingName = true;
+                this.name = null;
+            }
+            super.visitTypeInsn(opcode, type);
+        }
+
+        @Override
+        public void visitLdcInsn(Object cst) {
+            if (this.incomingName && cst instanceof String) {
+                this.incomingName = false;
+                this.name = (String) cst;
+            }
+            super.visitLdcInsn(cst);
+        }
+
+        @Override
+        public void visitFieldInsn(int opcode, String owner, String name, String desc) {
+            // We want to be certain that the field is actually an Enum type
+            if (Objects.equals("L" + owner + ";", desc) &&
+                    // We also want to be certain that we have a name to map too
+                    this.name != null &&
+                    // And the opcode is right
+                    opcode == Opcodes.PUTSTATIC) {
+                // Get the class, get the field, map the field
+                this.mappings.getOrCreateClassMapping(owner)
+                        .getOrCreateFieldMapping(name)
+                        .setDeobfuscatedName(this.name);
+            }
+            super.visitFieldInsn(opcode, owner, name, desc);
+        }
+
     }
 
 }
