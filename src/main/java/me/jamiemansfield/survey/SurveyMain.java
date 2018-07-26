@@ -71,26 +71,26 @@ public final class SurveyMain {
         final OptionSpec<Void> intMapSpec = parser.acceptsAll(asList("int-map", "intermediary-map"), "Create intermediary mappings for a jar");
 
         // Options
-        final OptionSpec<Path> jarInPathSpec = parser.accepts("jarIn", "The location of the jar to map")
+        final OptionSpec<Path> jarInPathSpec = parser.accepts("jar-in", "The location of the jar to map")
                 .withRequiredArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
         final OptionSpec<Path> mappingsPathSpec = parser.accepts("mappings", "The location of the mappings")
                 .requiredIf(remapSpec)
                 .withOptionalArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
-        final OptionSpec<MappingFormat> mappingsFormatSpec = parser.accepts("mappingsFormat", "The format of the mappings")
+        final OptionSpec<MappingFormat> mappingsFormatSpec = parser.accepts("mappings-format", "The format of the mappings")
                 .withRequiredArg()
                 .ofType(MappingFormat.class)
                 .defaultsTo(MappingFormat.SRG);
-        final OptionSpec<Path> jarOutPathSpec = parser.accepts("jarOut", "Where to save the mapped jar")
+        final OptionSpec<Path> jarOutPathSpec = parser.accepts("jar-out", "Where to save the mapped jar")
                 .requiredIf(remapSpec)
                 .withOptionalArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
-        final OptionSpec<Path> mappingsOutPathSpec = parser.accepts("mappingsOut", "Where to save the intermediary mappings")
+        final OptionSpec<Path> mappingsOutPathSpec = parser.accepts("mappings-out", "Where to save the intermediary mappings")
                 .requiredIf(intMapSpec)
                 .withOptionalArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
-        final OptionSpec<Path> intMapConfigPathSpec = parser.accepts("intMapConfig", "Where to save the intermediary mappings")
+        final OptionSpec<Path> intMapConfigPathSpec = parser.accepts("int-map-config", "Where to save the intermediary mappings")
                 .withOptionalArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
 
