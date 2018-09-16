@@ -36,19 +36,14 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import me.jamiemansfield.bombe.asm.jar.JarWalker;
+import me.jamiemansfield.bombe.asm.jar.SourceSet;
 import me.jamiemansfield.lorenz.MappingSet;
-import me.jamiemansfield.lorenz.io.reader.MappingsReader;
-import me.jamiemansfield.lorenz.io.writer.MappingsWriter;
-import me.jamiemansfield.survey.jar.JarWalker;
-import me.jamiemansfield.survey.jar.SourceSet;
 import me.jamiemansfield.survey.mapper.IntermediaryMapper;
 import me.jamiemansfield.survey.mapper.IntermediaryMapperConfig;
 import me.jamiemansfield.survey.util.PathValueConverter;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -131,7 +126,7 @@ public final class SurveyMain {
             }
 
             new SurveyMapper()
-                    .loadMappings(mappingsPath, mappingFormat::create)
+                    .loadMappings(mappingsPath, mappingFormat.get())
                     .remap(jarInPath, jarOutPath);
         }
         else if (options.has(intMapSpec)) {
@@ -149,8 +144,8 @@ public final class SurveyMain {
                     throw new RuntimeException("Input mappings does not exist!");
                 }
 
-                try (final MappingsReader reader = mappingFormat.create(new BufferedReader(new InputStreamReader(Files.newInputStream(mappingsPath))))) {
-                    reader.parse(mappings);
+                try {
+                    mappingFormat.get().read(mappings, mappingsPath);
                 }
                 catch (final IOException ex) {
                     ex.printStackTrace();
@@ -176,8 +171,8 @@ public final class SurveyMain {
 
             if (options.has(intMapConfigPathSpec)) config.save(options.valueOf(intMapConfigPathSpec));
 
-            try (final MappingsWriter writer = mappingFormat.create(new PrintWriter(Files.newOutputStream(mappingsOutPath)))) {
-                writer.write(mappings);
+            try {
+                mappingFormat.get().write(mappings, mappingsOutPath);
             }
             catch (final IOException ex) {
                 ex.printStackTrace();

@@ -30,9 +30,9 @@
 
 package me.jamiemansfield.survey;
 
-import com.google.common.io.ByteStreams;
-import me.jamiemansfield.survey.jar.JarWalker;
-import me.jamiemansfield.survey.jar.SourceSet;
+import me.jamiemansfield.bombe.asm.jar.JarWalker;
+import me.jamiemansfield.bombe.asm.jar.SourceSet;
+import me.jamiemansfield.survey.util.ByteStreams;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;

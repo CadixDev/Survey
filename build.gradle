@@ -36,7 +36,8 @@ dependencies {
     compile 'org.ow2.asm:asm-commons:6.2'
 
     // Mappings IO
-    compile 'me.jamiemansfield:lorenz:0.3.2'
+    compile 'me.jamiemansfield:lorenz:0.4.0'
+    compile 'me.jamiemansfield:lorenz-asm:0.4.0'
 
     // CSV
     compile 'me.jamiemansfield:csv:0.1.0'

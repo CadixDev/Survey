@@ -32,19 +32,22 @@ package me.jamiemansfield.survey.mapper;
 
 import static org.objectweb.asm.Opcodes.ASM6;
 
+import me.jamiemansfield.bombe.analysis.CascadingInheritanceProvider;
+import me.jamiemansfield.bombe.analysis.InheritanceProvider;
+import me.jamiemansfield.bombe.asm.analysis.ClassLoaderInheritanceProvider;
+import me.jamiemansfield.bombe.asm.analysis.SourceSetInheritanceProvider;
+import me.jamiemansfield.bombe.asm.jar.SourceSet;
+import me.jamiemansfield.bombe.type.ArrayType;
+import me.jamiemansfield.bombe.type.FieldType;
+import me.jamiemansfield.bombe.type.MethodDescriptor;
+import me.jamiemansfield.bombe.type.ObjectType;
+import me.jamiemansfield.bombe.type.Type;
+import me.jamiemansfield.bombe.type.signature.FieldSignature;
+import me.jamiemansfield.bombe.type.signature.MethodSignature;
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.model.ClassMapping;
 import me.jamiemansfield.lorenz.model.FieldMapping;
 import me.jamiemansfield.lorenz.model.MethodMapping;
-import me.jamiemansfield.lorenz.model.jar.ArrayType;
-import me.jamiemansfield.lorenz.model.jar.MethodDescriptor;
-import me.jamiemansfield.lorenz.model.jar.Type;
-import me.jamiemansfield.lorenz.model.jar.signature.MethodSignature;
-import me.jamiemansfield.survey.analysis.CascadingInheritanceProvider;
-import me.jamiemansfield.survey.analysis.ClassLoaderInheritanceProvider;
-import me.jamiemansfield.survey.analysis.InheritanceProvider;
-import me.jamiemansfield.survey.analysis.SourceSetInheritanceProvider;
-import me.jamiemansfield.survey.jar.SourceSet;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -77,8 +80,8 @@ public class IntermediaryMapper {
      */
     private static final Comparator<MethodSignature> ALPHABETISE_METHODS = (o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName());
 
-    private static final MethodSignature MAIN_METHOD = new MethodSignature("main", MethodDescriptor.compile("([Ljava/lang/String;)V"));
-    private static final MethodSignature STATIC_INIT = new MethodSignature("<clinit>", MethodDescriptor.compile("()V"));
+    private static final MethodSignature MAIN_METHOD = new MethodSignature("main", MethodDescriptor.of("([Ljava/lang/String;)V"));
+    private static final MethodSignature STATIC_INIT = new MethodSignature("<clinit>", MethodDescriptor.of("()V"));
 
     private final IntermediaryMapperConfig config;
     private final MappingSet mappings;
@@ -126,7 +129,7 @@ public class IntermediaryMapper {
         if (!this.config.shouldMapFields()) return;
 
         klass.methods.stream()
-                .filter(method -> new MethodSignature(method.name, method.desc).equals(STATIC_INIT))
+                .filter(method -> MethodSignature.of(method.name, method.desc).equals(STATIC_INIT))
                 .forEach(method -> method.accept(enumMapper));
     }
 
@@ -134,7 +137,9 @@ public class IntermediaryMapper {
         final ClassMapping mapping = this.mappings.getOrCreateClassMapping(info.getName());
 
         // Map field mappings
+        // TODO: handle different types
         info.getFields().stream()
+                .map(FieldSignature::getName)
                 .sorted(String::compareToIgnoreCase)
                 .forEach(field -> this.mapField(mapping, field, klass));
 
@@ -194,7 +199,7 @@ public class IntermediaryMapper {
 
     private FieldMapping mapField(final ClassMapping classMapping, final String fieldName, final ClassNode klass) {
         final FieldMapping mapping = classMapping.getOrCreateFieldMapping(fieldName);
-        final Type klassType = Type.of("L" + klass.name + ";");
+        final FieldType klassType = new ObjectType(klass.name);
 
         final FieldNode field = klass.fields.stream()
                 .filter(node -> Objects.equals(node.name, fieldName)).findAny()
@@ -221,18 +226,18 @@ public class IntermediaryMapper {
 
         final MethodNode method = klass.methods.stream()
                 .filter(node -> Objects.equals(node.name, signature.getName()) &&
-                        Objects.equals(node.desc, signature.getDescriptor().getObfuscated())).findAny()
+                        Objects.equals(node.desc, this.mappings.deobfuscate(signature.getDescriptor()))).findAny()
                 .orElse(null);
         if (method == null || !this.config.shouldMapMethods()) return mapping;
 
         final boolean isEnum = Objects.equals(klass.superName, "java/lang/Enum");
         final MethodSignature enumValueOf = new MethodSignature(
                 "valueOf",
-                MethodDescriptor.compile("(Ljava/lang/String;)L" + klass.name + ";")
+                MethodDescriptor.of("(Ljava/lang/String;)L" + klass.name + ";")
         );
         final MethodSignature enumValues = new MethodSignature(
                 "values",
-                MethodDescriptor.compile("()[L" + klass.name + ";")
+                MethodDescriptor.of("()[L" + klass.name + ";")
         );
 
         if (signature.getName().startsWith(this.config.getMethodPrefix()) ||

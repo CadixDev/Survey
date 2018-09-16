@@ -30,18 +30,7 @@
 
 package me.jamiemansfield.survey;
 
-import me.jamiemansfield.lorenz.io.reader.CSrgReader;
-import me.jamiemansfield.lorenz.io.reader.MappingsReader;
-import me.jamiemansfield.lorenz.io.reader.SrgReader;
-import me.jamiemansfield.lorenz.io.reader.TSrgReader;
-import me.jamiemansfield.lorenz.io.writer.CSrgWriter;
-import me.jamiemansfield.lorenz.io.writer.MappingsWriter;
-import me.jamiemansfield.lorenz.io.writer.SrgWriter;
-import me.jamiemansfield.lorenz.io.writer.TSrgWriter;
-
-import java.io.BufferedReader;
-import java.io.PrintWriter;
-import java.util.function.Function;
+import me.jamiemansfield.lorenz.io.MappingFormats;
 
 /**
  * The many mapping formats that are supported by Survey's CLI, all provided
@@ -55,47 +44,34 @@ public enum MappingFormat {
     /**
      * The standard SRG mapping format.
      */
-    SRG(SrgReader::new, SrgWriter::new),
+    SRG(MappingFormats.SRG),
 
     /**
      * The compact SRG mapping format, used by Spigot.
      */
-    CSRG(CSrgReader::new, CSrgWriter::new),
+    CSRG(MappingFormats.CSRG),
 
     /**
      * The tabbed SRG mapping format, used by MCPConfig.
      */
-    TSRG(TSrgReader::new, TSrgWriter::new),
+    TSRG(MappingFormats.TSRG),
 
     ;
 
-    private final Function<BufferedReader, MappingsReader> readerConstructor;
-    private final Function<PrintWriter, MappingsWriter> writerConstructor;
+    private final me.jamiemansfield.lorenz.io.MappingFormat format;
 
-    MappingFormat(final Function<BufferedReader, MappingsReader> readerConstructor,
-            final Function<PrintWriter, MappingsWriter> writerConstructor) {
-        this.readerConstructor = readerConstructor;
-        this.writerConstructor = writerConstructor;
+    MappingFormat(final me.jamiemansfield.lorenz.io.MappingFormat format) {
+        this.format = format;
     }
 
     /**
-     * Creates a mapping reader for the given format.
+     * Gets the wrapped mapping format.
      *
-     * @param reader The reader to use for construction
-     * @return The mapping reader
+     * @return The mapping format
+     * @since 0.2.0
      */
-    public MappingsReader create(final BufferedReader reader) {
-        return this.readerConstructor.apply(reader);
-    }
-
-    /**
-     * Creates a mapping writer for the given format.
-     *
-     * @param writer The writer to use for construction
-     * @return The mapping writer
-     */
-    public MappingsWriter create(final PrintWriter writer) {
-        return this.writerConstructor.apply(writer);
+    public me.jamiemansfield.lorenz.io.MappingFormat get() {
+        return this.format;
     }
 
 }

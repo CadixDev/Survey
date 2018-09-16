@@ -30,24 +30,19 @@
 
 package me.jamiemansfield.survey;
 
+import me.jamiemansfield.bombe.analysis.InheritanceProvider;
+import me.jamiemansfield.bombe.asm.analysis.SourceSetInheritanceProvider;
 import me.jamiemansfield.lorenz.MappingSet;
-import me.jamiemansfield.lorenz.io.reader.CSrgReader;
-import me.jamiemansfield.lorenz.io.reader.MappingsReader;
-import me.jamiemansfield.lorenz.io.reader.SrgReader;
-import me.jamiemansfield.lorenz.io.reader.TSrgReader;
+import me.jamiemansfield.lorenz.io.MappingFormat;
+import me.jamiemansfield.lorenz.io.MappingFormats;
 import me.jamiemansfield.lorenz.model.Mapping;
-import me.jamiemansfield.survey.analysis.InheritanceProvider;
-import me.jamiemansfield.survey.analysis.SourceSetInheritanceProvider;
-import me.jamiemansfield.survey.remapper.LorenzRemapper;
+import me.jamiemansfield.survey.remapper.SurveyRemapper;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.function.Function;
 
 /**
- * A fluent interface for using Survey's {@link LorenzRemapper}.
+ * A fluent interface for using Survey's {@link SurveyRemapper}.
  *
  * @author Jamie Mansfield
  * @since 0.2.0
@@ -68,12 +63,12 @@ public class SurveyMapper {
      * Loads mappings from the given path, using the given reader.
      *
      * @param mappingsPath The path to the mappings file
-     * @param readerConstructor The reader to use for reading the mappings file
+     * @param format The mapping format to use for reading the mappings file
      * @return {@code this}, for chaining
      */
-    public SurveyMapper loadMappings(final Path mappingsPath, final Function<BufferedReader, MappingsReader> readerConstructor) {
-        try (final MappingsReader reader = readerConstructor.apply(Files.newBufferedReader(mappingsPath))) {
-            reader.parse(this.mappings);
+    public SurveyMapper loadMappings(final Path mappingsPath, final MappingFormat format) {
+        try {
+            format.read(this.mappings, mappingsPath);
         }
         catch (final IOException ignored) {
         }
@@ -87,7 +82,7 @@ public class SurveyMapper {
      * @return {@code this}, for chaining
      */
     public SurveyMapper loadSrgMappings(final Path mappingsPath) {
-        return this.loadMappings(mappingsPath, SrgReader::new);
+        return this.loadMappings(mappingsPath, MappingFormats.SRG);
     }
 
     /**
@@ -97,7 +92,7 @@ public class SurveyMapper {
      * @return {@code this}, for chaining
      */
     public SurveyMapper loadCSrgMappings(final Path mappingsPath) {
-        return this.loadMappings(mappingsPath, CSrgReader::new);
+        return this.loadMappings(mappingsPath, MappingFormats.CSRG);
     }
 
     /**
@@ -107,7 +102,7 @@ public class SurveyMapper {
      * @return {@code this}, for chaining
      */
     public SurveyMapper loadTSrgMappings(final Path mappingsPath) {
-        return this.loadMappings(mappingsPath, TSrgReader::new);
+        return this.loadMappings(mappingsPath, MappingFormats.TSRG);
     }
 
     /**
@@ -122,7 +117,7 @@ public class SurveyMapper {
                 input,
                 sources -> {
                     final InheritanceProvider inheritance = new SourceSetInheritanceProvider(sources);
-                    return new LorenzRemapper(mappings, inheritance);
+                    return new SurveyRemapper(mappings, inheritance);
                 },
                 klassName -> mappings.getClassMapping(klassName)
                         .map(Mapping::getFullDeobfuscatedName)
