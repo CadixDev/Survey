@@ -34,7 +34,6 @@ import me.jamiemansfield.bombe.analysis.InheritanceProvider;
 import me.jamiemansfield.bombe.asm.analysis.SourceSetInheritanceProvider;
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.io.MappingFormat;
-import me.jamiemansfield.lorenz.io.MappingFormats;
 import me.jamiemansfield.lorenz.model.Mapping;
 import me.jamiemansfield.survey.remapper.SurveyRemapper;
 
@@ -73,36 +72,6 @@ public class SurveyMapper {
         catch (final IOException ignored) {
         }
         return this;
-    }
-
-    /**
-     * Loads mappings from the given path, using the SRG reader.
-     *
-     * @param mappingsPath The path to the mappings file
-     * @return {@code this}, for chaining
-     */
-    public SurveyMapper loadSrgMappings(final Path mappingsPath) {
-        return this.loadMappings(mappingsPath, MappingFormats.SRG);
-    }
-
-    /**
-     * Loads mappings from the given path, using the CSRG reader.
-     *
-     * @param mappingsPath The path to the mappings file
-     * @return {@code this}, for chaining
-     */
-    public SurveyMapper loadCSrgMappings(final Path mappingsPath) {
-        return this.loadMappings(mappingsPath, MappingFormats.CSRG);
-    }
-
-    /**
-     * Loads mappings from the given path, using the TSRG reader.
-     *
-     * @param mappingsPath The path to the mappings file
-     * @return {@code this}, for chaining
-     */
-    public SurveyMapper loadTSrgMappings(final Path mappingsPath) {
-        return this.loadMappings(mappingsPath, MappingFormats.TSRG);
     }
 
     /**
