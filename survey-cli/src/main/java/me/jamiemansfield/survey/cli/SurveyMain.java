@@ -93,7 +93,8 @@ public final class SurveyMain {
         final OptionSet options;
         try {
             options = parser.parse(args);
-        } catch (final OptionException ex) {
+        }
+        catch (final OptionException ex) {
             System.err.println("Failed to parse OptionSet! Exiting...");
             ex.printStackTrace(System.err);
             System.exit(-1);
@@ -178,10 +179,12 @@ public final class SurveyMain {
             catch (final IOException ex) {
                 ex.printStackTrace();
             }
-        } else {
+        }
+        else {
             try {
                 parser.printHelpOn(System.err);
-            } catch (final IOException ex) {
+            }
+            catch (final IOException ex) {
                 System.err.println("Failed to print help information!");
                 ex.printStackTrace(System.err);
             }

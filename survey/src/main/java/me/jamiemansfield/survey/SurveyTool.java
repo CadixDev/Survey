@@ -121,7 +121,8 @@ public final class SurveyTool {
             catch (final IOException ex) {
                 ex.printStackTrace();
             }
-        } catch (final IOException ex) {
+        }
+        catch (final IOException ex) {
             System.err.println("Failed to read the jar file!");
             ex.printStackTrace(System.err);
         }

@@ -37,16 +37,6 @@ subprojects {
         from 'LICENSE.txt'
     }
 
-    jar {
-        manifest {
-            attributes(
-                    'Implementation-Title': name,
-                    'Implementation-Version': version,
-                    'Main-Class': 'me.jamiemansfield.survey.SurveyMain'
-            )
-        }
-    }
-
     javadoc {
         options.encoding = 'UTF-8'
         options.charSet = 'UTF-8'
