@@ -1,0 +1,6 @@
+dependencies {
+    compile project(':survey')
+
+    // CLI
+    compile 'net.sf.jopt-simple:jopt-simple:5.0.4'
+}

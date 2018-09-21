@@ -28,36 +28,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package me.jamiemansfield.survey.util;
+package me.jamiemansfield.survey.cli;
 
-import joptsimple.ValueConverter;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import me.jamiemansfield.lorenz.io.MappingFormats;
 
 /**
- * An implementation of {@link ValueConverter} for handling {@link Path}s.
+ * The many mapping formats that are supported by Survey's CLI, all provided
+ * by Lorenz.
  *
  * @author Jamie Mansfield
- * @since 0.1.0
+ * @since 0.2.0
  */
-public final class PathValueConverter implements ValueConverter<Path> {
+public enum MappingFormat {
 
-    public static final PathValueConverter INSTANCE = new PathValueConverter();
+    /**
+     * The standard SRG mapping format.
+     */
+    SRG(MappingFormats.SRG),
 
-    @Override
-    public Path convert(final String value) {
-        return Paths.get(value);
+    /**
+     * The compact SRG mapping format, used by Spigot.
+     */
+    CSRG(MappingFormats.CSRG),
+
+    /**
+     * The tabbed SRG mapping format, used by MCPConfig.
+     */
+    TSRG(MappingFormats.TSRG),
+
+    ;
+
+    private final me.jamiemansfield.lorenz.io.MappingFormat format;
+
+    MappingFormat(final me.jamiemansfield.lorenz.io.MappingFormat format) {
+        this.format = format;
     }
 
-    @Override
-    public Class<Path> valueType() {
-        return Path.class;
-    }
-
-    @Override
-    public String valuePattern() {
-        return null;
+    /**
+     * Gets the wrapped mapping format.
+     *
+     * @return The mapping format
+     */
+    public me.jamiemansfield.lorenz.io.MappingFormat get() {
+        return this.format;
     }
 
 }

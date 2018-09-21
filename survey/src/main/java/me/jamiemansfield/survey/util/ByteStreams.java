@@ -77,7 +77,7 @@ public final class ByteStreams {
         final byte[] buf = createBuffer();
         long total = 0;
         while (true) {
-            int r = from.read(buf);
+            final int r = from.read(buf);
             if (r == -1) {
                 break;
             }

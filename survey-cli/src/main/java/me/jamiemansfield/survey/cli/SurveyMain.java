@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package me.jamiemansfield.survey;
+package me.jamiemansfield.survey.cli;
 
 import static java.util.Arrays.asList;
 
@@ -39,9 +39,10 @@ import joptsimple.OptionSpec;
 import me.jamiemansfield.bombe.asm.jar.JarWalker;
 import me.jamiemansfield.bombe.asm.jar.SourceSet;
 import me.jamiemansfield.lorenz.MappingSet;
+import me.jamiemansfield.survey.SurveyMapper;
+import me.jamiemansfield.survey.cli.util.PathValueConverter;
 import me.jamiemansfield.survey.mapper.IntermediaryMapper;
 import me.jamiemansfield.survey.mapper.IntermediaryMapperConfig;
-import me.jamiemansfield.survey.util.PathValueConverter;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,7 +52,7 @@ import java.nio.file.Path;
  * The Main-Class behind Survey, a simple remapping tool.
  *
  * @author Jamie Mansfield
- * @since 0.1.0
+ * @since 0.2.0
  */
 public final class SurveyMain {
 

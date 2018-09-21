@@ -5,152 +5,132 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'gradle.plugin.net.minecrell:licenser:0.3'
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.3'
     }
 }
 
-apply plugin: 'java'
-apply plugin: 'maven'
-if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
-    apply plugin: 'signing'
-}
-apply plugin: 'com.github.johnrengelman.plugin-shadow'
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'com.github.johnrengelman.plugin-shadow'
 
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
 
-group = 'me.jamiemansfield'
-archivesBaseName = project.name.toLowerCase()
-version = '0.2.0-SNAPSHOT'
+    group = 'me.jamiemansfield'
+    archivesBaseName = project.name.toLowerCase()
+    version = '0.2.0-SNAPSHOT'
 
-repositories {
-    mavenCentral()
-}
+    repositories {
+        mavenCentral()
+    }
 
-dependencies {
-    // CLI
-    compile 'net.sf.jopt-simple:jopt-simple:5.0.4'
+    dependencies {
+        testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
+        testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.2.0'
+    }
 
-    // Bytecode Analysis
-    compile 'org.ow2.asm:asm-commons:6.2'
+    processResources {
+        from 'LICENSE.txt'
+    }
 
-    // Mappings IO
-    compile 'me.jamiemansfield:lorenz:0.4.0'
-    compile 'me.jamiemansfield:lorenz-asm:0.4.0'
+    jar {
+        manifest {
+            attributes(
+                    'Implementation-Title': name,
+                    'Implementation-Version': version,
+                    'Main-Class': 'me.jamiemansfield.survey.SurveyMain'
+            )
+        }
+    }
 
-    // CSV
-    compile 'me.jamiemansfield:csv:0.1.0'
-
-    // Caching
-    compile 'com.github.ben-manes.caffeine:caffeine:2.6.2'
-}
-
-processResources {
-    from 'LICENSE.txt'
-}
-
-jar {
-    manifest {
-        attributes(
-                'Implementation-Title': name,
-                'Implementation-Version': version,
-                'Main-Class': 'me.jamiemansfield.survey.SurveyMain'
+    javadoc {
+        options.encoding = 'UTF-8'
+        options.charSet = 'UTF-8'
+        options.links(
+                'https://jd.jamiemansfield.me/lorenz/0.2.0/',
+                'https://jd.jamiemansfield.me/csv/0.1.0/',
+                'https://docs.oracle.com/javase/8/docs/api/'
         )
     }
-}
 
-javadoc {
-    options.encoding = 'UTF-8'
-    options.charSet = 'UTF-8'
-    options.links(
-            'https://jd.jamiemansfield.me/lorenz/0.2.0/',
-            'https://jd.jamiemansfield.me/csv/0.1.0/',
-            'https://google.github.io/guava/releases/22.0/api/docs/',
-            'https://docs.oracle.com/javase/8/docs/api/'
-    )
-}
-
-task javadocJar(type: Jar, dependsOn: 'javadoc') {
-    from javadoc.destinationDir
-    classifier = 'javadoc'
-}
-
-task sourcesJar(type: Jar, dependsOn: 'classes') {
-    from sourceSets.main.allSource
-    classifier = 'sources'
-}
-
-artifacts {
-    archives shadowJar
-    archives javadocJar
-    archives sourcesJar
-}
-
-if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
-    signing {
-        sign configurations.archives
+    task javadocJar(type: Jar, dependsOn: 'javadoc') {
+        from javadoc.destinationDir
+        classifier = 'javadoc'
     }
-}
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            // repo.jamiemansfield.me
-            if (System.getenv('MAVEN_RELEASES') != null && System.getenv('MAVEN_SNAPSHOTS') != null) {
-                repository(url: 'file://' + System.getenv('MAVEN_RELEASES'))
-                snapshotRepository(url: 'file://' + System.getenv('MAVEN_SNAPSHOTS'))
-            }
+    task sourcesJar(type: Jar, dependsOn: 'classes') {
+        from sourceSets.main.allSource
+        classifier = 'sources'
+    }
 
-            // Maven Central
-            if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+    artifacts {
+        archives shadowJar
+        archives javadocJar
+        archives sourcesJar
+    }
 
-                repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
+    if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+        apply plugin: 'signing'
+        signing {
+            required { !version.endsWith('-SNAPSHOT') && gradle.taskGraph.hasTask(tasks.uploadArchives) }
+            sign configurations.archives
+        }
+    }
 
-                snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
-            }
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                // Maven Central
+                if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+                    beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-            pom {
-                artifactId = project.archivesBaseName
-
-                project {
-                    name = project.name
-                    description = project.description
-                    packaging = 'jar'
-                    url = project.url
-                    inceptionYear = project.inceptionYear
-
-                    scm {
-                        url = 'https://github.com/jamiemansfield/Survey'
-                        connection = 'scm:git:https://github.com/jamiemansfield/Survey.git'
-                        developerConnection = 'scm:git:git@github.com:jamiemansfield/Survey.git'
+                    repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+                        authentication(userName: ossrhUsername, password: ossrhPassword)
                     }
 
-                    issueManagement {
-                        system = 'GitHub'
-                        url = 'https://github.com/jamiemansfield/Survey/issues'
+                    snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+                        authentication(userName: ossrhUsername, password: ossrhPassword)
                     }
+                }
 
-                    licenses {
-                        license {
-                            name = 'BSD 3-Clause'
-                            url = 'https://opensource.org/licenses/BSD-3-Clause'
-                            distribution = 'repo'
+                pom {
+                    artifactId = project.archivesBaseName
+
+                    project {
+                        name = project.name
+                        description = project.description
+                        packaging = 'jar'
+                        url = project.url
+                        inceptionYear = project.inceptionYear
+
+                        scm {
+                            url = 'https://github.com/jamiemansfield/Survey'
+                            connection = 'scm:git:https://github.com/jamiemansfield/Survey.git'
+                            developerConnection = 'scm:git:git@github.com:jamiemansfield/Survey.git'
                         }
-                    }
 
-                    developers {
-                        developer {
-                            id = 'jamierocks'
-                            name = 'Jamie Mansfield'
-                            email = 'dev@jamierocks.uk'
-                            url = 'https://www.jamiemansfield.me/'
-                            timezone = 'Europe/London'
+                        issueManagement {
+                            system = 'GitHub'
+                            url = 'https://github.com/jamiemansfield/Survey/issues'
+                        }
+
+                        licenses {
+                            license {
+                                name = 'BSD 3-Clause'
+                                url = 'https://opensource.org/licenses/BSD-3-Clause'
+                                distribution = 'repo'
+                            }
+                        }
+
+                        developers {
+                            developer {
+                                id = 'jamierocks'
+                                name = 'Jamie Mansfield'
+                                email = 'dev@jamierocks.uk'
+                                url = 'https://www.jamiemansfield.me/'
+                                timezone = 'Europe/London'
+                            }
                         }
                     }
                 }

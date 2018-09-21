@@ -1,0 +1,8 @@
+dependencies {
+    // Mappings
+    compile 'me.jamiemansfield:lorenz:0.4.0'
+    compile 'me.jamiemansfield:lorenz-asm:0.4.0'
+
+    // CSV
+    compile 'me.jamiemansfield:csv:0.1.0'
+}
