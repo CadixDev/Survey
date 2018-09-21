@@ -85,6 +85,8 @@ public final class SurveyTool {
 
                             jos.putNextEntry(new JarEntry(entry.getName()));
                             jos.write(baos.toByteArray());
+                        } else if (entry.isDirectory()) {
+                            jos.putNextEntry(new JarEntry(entry.getName()));
                         }
                         else if (entry.isDirectory()) {
                             jos.putNextEntry(new JarEntry(entry.getName()));
