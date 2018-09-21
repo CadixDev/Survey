@@ -12,7 +12,6 @@ buildscript {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
-    apply plugin: 'com.github.johnrengelman.plugin-shadow'
 
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
@@ -28,6 +27,10 @@ subprojects {
     dependencies {
         testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
         testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.2.0'
+    }
+
+    test {
+        useJUnitPlatform()
     }
 
     processResources {
@@ -65,7 +68,6 @@ subprojects {
     }
 
     artifacts {
-        archives shadowJar
         archives javadocJar
         archives sourcesJar
     }

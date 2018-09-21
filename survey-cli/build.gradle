@@ -1,6 +1,12 @@
+apply plugin: 'com.github.johnrengelman.plugin-shadow'
+
 dependencies {
     compile project(':survey')
 
     // CLI
     compile 'net.sf.jopt-simple:jopt-simple:5.0.4'
+}
+
+artifacts {
+    archives shadowJar
 }
