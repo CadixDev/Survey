@@ -36,10 +36,14 @@ package me.jamiemansfield.survey.jar;
  *
  * @author Jamie Mansfield
  */
-public interface JarEntryVisitor {
+public interface JarEntryTransformer {
 
-    JarClassEntry accept(final JarClassEntry entry);
+    default JarClassEntry transform(final JarClassEntry entry) {
+        return entry;
+    }
 
-    JarResourceEntry accept(final JarResourceEntry entry);
+    default JarResourceEntry transform(final JarResourceEntry entry) {
+        return entry;
+    }
 
 }

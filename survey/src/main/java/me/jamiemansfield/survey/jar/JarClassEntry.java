@@ -30,25 +30,20 @@
 
 package me.jamiemansfield.survey.jar;
 
+import me.jamiemansfield.survey.util.ThrowingSupplier;
+
+import java.io.IOException;
+import java.io.InputStream;
+
 public class JarClassEntry extends AbstractJarEntry {
 
-    public JarClassEntry(final String name, final byte[] contents) {
-
+    public JarClassEntry(final String name, final ThrowingSupplier<InputStream, IOException> stream) {
+        super(name, stream);
     }
 
     @Override
-    public String getName() {
-        return null;
-    }
-
-    @Override
-    public byte[] getContents() {
-        return new byte[0];
-    }
-
-    @Override
-    public void accept(final JarEntryVisitor vistor) {
-        vistor.accept(this);
+    public JarClassEntry accept(final JarEntryTransformer vistor) {
+        return vistor.transform(this);
     }
 
 }

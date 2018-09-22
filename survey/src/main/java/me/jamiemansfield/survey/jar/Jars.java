@@ -30,6 +30,8 @@
 
 package me.jamiemansfield.survey.jar;
 
+import me.jamiemansfield.survey.util.ByteStreams;
+import me.jamiemansfield.survey.util.ThrowingSupplier;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -37,59 +39,121 @@ import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.ClassNode;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.function.BiFunction;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 import java.util.stream.Stream;
 
 /**
- * Utilities for working with jar files
+ * Utilities for working with jar files.
+ *
+ * @author Jamie Mansfield
  */
 public final class Jars {
 
-    public static Stream<AbstractJarEntry> walk(final Path path) {
-        return null;
+    public static Stream<AbstractJarEntry> walk(final Path jarPath) throws IOException {
+        try (final JarFile jarFile = new JarFile(jarPath.toFile())) {
+            return walk(jarFile);
+        }
+    }
+
+    public static Stream<AbstractJarEntry> walk(final JarFile jarFile) {
+        return jarFile.stream().filter(entry -> !entry.isDirectory()).map(entry -> {
+            final String name = entry.getName();
+            final ThrowingSupplier<InputStream, IOException> stream = () -> jarFile.getInputStream(entry);
+
+            if (entry.getName().endsWith(".class")) {
+                return new JarClassEntry(name, stream);
+            }
+            else {
+                return new JarResourceEntry(name, stream);
+            }
+        });
+    }
+
+    public static JarOutputStream transform(final JarOutputStream jos, final JarFile jarFile, final JarEntryTransformer... transformers) {
+        final JarEntryTransformer masterTransformer = new JarEntryTransformer() {
+            @Override
+            public JarClassEntry transform(final JarClassEntry entry) {
+                JarClassEntry lastEntry = entry;
+                for (final JarEntryTransformer transformer : transformers) {
+                    lastEntry = entry.accept(transformer);
+                }
+                return lastEntry;
+            }
+
+            @Override
+            public JarResourceEntry transform(final JarResourceEntry entry) {
+                JarResourceEntry lastEntry = entry;
+                for (final JarEntryTransformer transformer : transformers) {
+                    lastEntry = entry.accept(transformer);
+                }
+                return lastEntry;
+            }
+        };
+
+        walk(jarFile).map(entry -> entry.accept(masterTransformer)).forEach(entry -> {
+            try {
+                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ByteStreams.copy(entry.getStream(), baos);
+
+                jos.putNextEntry(entry.createEntry());
+                jos.write(baos.toByteArray());
+            }
+            catch (final IOException ignored) {
+                // TODO: handle?
+            }
+        });
+
+        return jos;
     }
 
     private Jars() {
     }
 
-    public static class RemappingJarEntryVisitor implements JarEntryVisitor {
+    public static class RemappingJarEntryTransformer implements JarEntryTransformer {
 
         private final Remapper remapper;
         private final BiFunction<ClassVisitor, Remapper, ClassRemapper> clsRemapper;
 
-        public RemappingJarEntryVisitor(final Remapper remapper, final BiFunction<ClassVisitor, Remapper, ClassRemapper> clsRemapper) {
+        public RemappingJarEntryTransformer(final Remapper remapper, final BiFunction<ClassVisitor, Remapper, ClassRemapper> clsRemapper) {
             this.remapper = remapper;
             this.clsRemapper = clsRemapper;
         }
 
-        public RemappingJarEntryVisitor(final Remapper remapper) {
+        public RemappingJarEntryTransformer(final Remapper remapper) {
             this(remapper, ClassRemapper::new);
         }
 
         @Override
-        public JarClassEntry accept(final JarClassEntry entry) {
-            // Read the original into a ClassNode
-            final ClassNode original = new ClassNode();
-            new ClassReader(entry.getContents()).accept(original, 0);
+        public JarClassEntry transform(final JarClassEntry entry) {
+            try (final InputStream stream = entry.getStream()) {
+                // Read the original into a ClassNode
+                final ClassNode original = new ClassNode();
+                new ClassReader(stream).accept(original, 0);
 
-            // Remap into another ClassNode
-            final ClassNode modified = new ClassNode();
-            original.accept(this.clsRemapper.apply(
-                    modified,
-                    this.remapper
-            ));
+                // Remap into another ClassNode
+                final ClassNode modified = new ClassNode();
+                original.accept(this.clsRemapper.apply(
+                        modified,
+                        this.remapper
+                ));
 
-            // Create the jar entry
-            final String name = modified.name + ".class";
-            final ClassWriter writer = new ClassWriter(0);
-            modified.accept(writer);
-            return new JarClassEntry(name, writer.toByteArray());
-        }
-
-        @Override
-        public JarResourceEntry accept(final JarResourceEntry entry) {
-            return entry;
+                // Create the jar entry
+                final String name = modified.name + ".class";
+                final ClassWriter writer = new ClassWriter(0);
+                modified.accept(writer);
+                return new JarClassEntry(name, () -> new ByteArrayInputStream(writer.toByteArray()));
+            }
+            catch (final IOException ignored) {
+                // Incorrectly marked as a class probably :s
+                return entry;
+            }
         }
 
     }

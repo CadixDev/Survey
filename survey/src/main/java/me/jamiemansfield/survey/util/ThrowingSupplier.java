@@ -28,41 +28,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package me.jamiemansfield.survey.jar;
+package me.jamiemansfield.survey.util;
 
-import me.jamiemansfield.survey.util.ThrowingSupplier;
+@FunctionalInterface
+public interface ThrowingSupplier<T, E extends Throwable> {
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.jar.JarEntry;
-
-/**
- * Represents an entry within a jar file.
- *
- * @author Jamie Mansfield
- */
-public abstract class AbstractJarEntry {
-
-    private final String name;
-    private final ThrowingSupplier<InputStream, IOException> stream;
-
-    protected AbstractJarEntry(final String name, final ThrowingSupplier<InputStream, IOException> stream) {
-        this.name = name;
-        this.stream = stream;
-    }
-
-    public final String getName() {
-        return this.name;
-    }
-
-    public final InputStream getStream() throws IOException {
-        return this.stream.get();
-    }
-
-    public JarEntry createEntry() {
-        return new JarEntry(this.name);
-    }
-
-    public abstract AbstractJarEntry accept(final JarEntryTransformer vistor);
+    T get() throws E;
 
 }
