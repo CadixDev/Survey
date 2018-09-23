@@ -43,8 +43,8 @@ import java.util.jar.JarEntry;
  */
 public abstract class AbstractJarEntry {
 
-    private final String name;
-    private final ThrowingSupplier<InputStream, IOException> stream;
+    protected final String name;
+    protected final ThrowingSupplier<InputStream, IOException> stream;
 
     protected AbstractJarEntry(final String name, final ThrowingSupplier<InputStream, IOException> stream) {
         this.name = name;
@@ -55,11 +55,13 @@ public abstract class AbstractJarEntry {
         return this.name;
     }
 
+    public abstract String getExtension();
+
     public final InputStream getStream() throws IOException {
         return this.stream.get();
     }
 
-    public JarEntry createEntry() {
+    public final JarEntry createEntry() {
         return new JarEntry(this.name);
     }
 

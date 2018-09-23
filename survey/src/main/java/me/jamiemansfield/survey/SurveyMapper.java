@@ -30,15 +30,20 @@
 
 package me.jamiemansfield.survey;
 
-import me.jamiemansfield.bombe.analysis.InheritanceProvider;
-import me.jamiemansfield.bombe.asm.analysis.SourceSetInheritanceProvider;
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.io.MappingFormat;
-import me.jamiemansfield.lorenz.model.Mapping;
+import me.jamiemansfield.survey.analysis.SurveyInheritanceProvider;
+import me.jamiemansfield.survey.jar.Jars;
 import me.jamiemansfield.survey.remapper.SurveyRemapper;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.Remapper;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 
 /**
  * A fluent interface for using Survey's {@link SurveyRemapper}.
@@ -82,17 +87,38 @@ public class SurveyMapper {
      * @param output The output jar
      */
     public void remap(final Path input, final Path output) {
-        SurveyTool.remapJar(
-                input,
-                sources -> {
-                    final InheritanceProvider inheritance = new SourceSetInheritanceProvider(sources);
-                    return new SurveyRemapper(mappings, inheritance);
-                },
-                klassName -> mappings.getClassMapping(klassName)
-                        .map(Mapping::getFullDeobfuscatedName)
-                        .orElse(klassName),
-                output
-        );
+        try (final JarFile jarFile = new JarFile(input.toFile());
+             final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(output))) {
+            final SurveyInheritanceProvider inheritance = new SurveyInheritanceProvider(jarFile);
+            Jars.transform(jos, jarFile, new Jars.RemappingJarEntryTransformer(
+                    new SurveyRemapper(mappings, inheritance),
+                    SurveyClassRemapper::new
+            ));
+        }
+        catch (final IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private static class SurveyClassRemapper extends ClassRemapper {
+
+        public SurveyClassRemapper(final ClassVisitor classVisitor, final Remapper remapper) {
+            super(classVisitor, remapper);
+        }
+
+        @Override
+        public void visitInnerClass(final String name, final String outerName, final String innerName, final int access) {
+            // We need to change the inner name as ASM doesn't
+            final String mappedName = this.remapper.map(name);
+            super.visitInnerClass(
+                    name,
+                    outerName,
+                    // This check is for anonymous classes
+                    innerName == null ? null : mappedName.substring(mappedName.lastIndexOf('$') + 1),
+                    access
+            );
+        }
+
     }
 
 }

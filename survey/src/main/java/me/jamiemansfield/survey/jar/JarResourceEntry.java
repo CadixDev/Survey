@@ -37,8 +37,24 @@ import java.io.InputStream;
 
 public class JarResourceEntry extends AbstractJarEntry {
 
+    private String extension;
+
     public JarResourceEntry(final String name, final ThrowingSupplier<InputStream, IOException> stream) {
         super(name, stream);
+    }
+
+    @Override
+    public final String getExtension() {
+        if (this.extension != null) {
+            return this.extension;
+        }
+
+        final int index = this.name.lastIndexOf('.');
+        if (index == -1) {
+            return this.extension = "";
+        }
+
+        return this.extension = this.name.substring(index + 1);
     }
 
     @Override

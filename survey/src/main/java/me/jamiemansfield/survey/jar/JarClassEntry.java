@@ -37,8 +37,15 @@ import java.io.InputStream;
 
 public class JarClassEntry extends AbstractJarEntry {
 
+    private static final String EXTENSION = "class";
+
     public JarClassEntry(final String name, final ThrowingSupplier<InputStream, IOException> stream) {
         super(name, stream);
+    }
+
+    @Override
+    public final String getExtension() {
+        return EXTENSION;
     }
 
     @Override

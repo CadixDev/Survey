@@ -37,7 +37,6 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
-import org.objectweb.asm.tree.ClassNode;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -133,21 +132,17 @@ public final class Jars {
         @Override
         public JarClassEntry transform(final JarClassEntry entry) {
             try (final InputStream stream = entry.getStream()) {
-                // Read the original into a ClassNode
-                final ClassNode original = new ClassNode();
-                new ClassReader(stream).accept(original, 0);
-
-                // Remap into another ClassNode
-                final ClassNode modified = new ClassNode();
-                original.accept(this.clsRemapper.apply(
-                        modified,
+                // Remap the class
+                final ClassReader reader = new ClassReader(stream);
+                final ClassWriter writer = new ClassWriter(reader, 0);
+                reader.accept(this.clsRemapper.apply(
+                        writer,
                         this.remapper
-                ));
+                ), 0);
 
                 // Create the jar entry
-                final String name = modified.name + ".class";
-                final ClassWriter writer = new ClassWriter(0);
-                modified.accept(writer);
+                final String originalName = entry.getName().substring(0, entry.getName().length() - ".class".length());
+                final String name = this.remapper.map(originalName) + ".class";
                 return new JarClassEntry(name, () -> new ByteArrayInputStream(writer.toByteArray()));
             }
             catch (final IOException ignored) {
