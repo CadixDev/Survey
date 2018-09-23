@@ -41,8 +41,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -104,21 +104,21 @@ public final class Jars {
             }
         };
 
-        final AtomicReference<String> lastPackage = new AtomicReference<>("");
+        final Set<String> packages = new HashSet<>();
         walk(jarFile)
                 .map(entry -> entry.accept(masterTransformer))
-                .sorted((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()))
                 .forEach(entry -> {
                     try {
-                        if (!Objects.equals(lastPackage.get(), entry.getPackage())) {
-                            lastPackage.set(entry.getPackage());
+                        if (!packages.contains(entry.getPackage())) {
+                            packages.add(entry.getPackage());
                             jos.putNextEntry(new JarEntry(entry.getPackage() + "/"));
                         }
 
                         entry.write(jos);
                     }
-                    catch (final IOException ignored) {
-                        // TODO: handle?
+                    catch (final IOException ex) {
+                        ex.printStackTrace();
+                        // todo:
                     }
                 });
 

@@ -59,7 +59,7 @@ public abstract class AbstractJarEntry {
         if (this.packageName != null) return this.packageName;
         final int index = this.name.lastIndexOf('/');
         if (index == -1) return this.packageName = "";
-        return this.packageName = this.name.substring(0, index + 1);
+        return this.packageName = this.name.substring(0, index);
     }
 
     public final String getSimpleName() {
