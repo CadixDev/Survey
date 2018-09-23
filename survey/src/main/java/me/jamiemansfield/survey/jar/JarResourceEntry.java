@@ -40,15 +40,9 @@ public class JarResourceEntry extends AbstractJarEntry {
 
     @Override
     public final String getExtension() {
-        if (this.extension != null) {
-            return this.extension;
-        }
-
+        if (this.extension != null) return this.extension;
         final int index = this.name.lastIndexOf('.');
-        if (index == -1) {
-            return this.extension = "";
-        }
-
+        if (index == -1) return this.extension = "";
         return this.extension = this.name.substring(index + 1);
     }
 

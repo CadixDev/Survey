@@ -103,8 +103,7 @@ public final class Jars {
 
         walk(jarFile).map(entry -> entry.accept(masterTransformer)).forEach(entry -> {
             try {
-                jos.putNextEntry(entry.createEntry());
-                jos.write(entry.getContents());
+                entry.write(jos);
             }
             catch (final IOException ignored) {
                 // TODO: handle?

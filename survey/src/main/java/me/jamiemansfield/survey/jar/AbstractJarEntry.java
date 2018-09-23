@@ -30,7 +30,9 @@
 
 package me.jamiemansfield.survey.jar;
 
+import java.io.IOException;
 import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
 /**
  * Represents an entry within a jar file.
@@ -41,6 +43,8 @@ public abstract class AbstractJarEntry {
 
     protected final String name;
     protected final byte[] contents;
+    private String packageName;
+    private String simpleName;
 
     protected AbstractJarEntry(final String name, final byte[] contents) {
         this.name = name;
@@ -51,14 +55,32 @@ public abstract class AbstractJarEntry {
         return this.name;
     }
 
+    public final String getPackage() {
+        if (this.packageName != null) return this.packageName;
+        final int index = this.name.lastIndexOf('/');
+        if (index == -1) return this.packageName = "";
+        return this.packageName = this.name.substring(0, index + 1);
+    }
+
+    public final String getSimpleName() {
+        if (this.simpleName != null) return this.simpleName;
+        final int packageLength = this.getPackage().isEmpty() ? -1 : this.getPackage().length();
+        final int extensionLength = this.getExtension().isEmpty() ? -1 : this.getExtension().length();
+        return this.simpleName = this.name.substring(
+                packageLength + 1,
+                this.name.length() - (extensionLength + 1)
+        );
+    }
+
     public abstract String getExtension();
 
     public final byte[] getContents() {
         return this.contents;
     }
 
-    public final JarEntry createEntry() {
-        return new JarEntry(this.name);
+    public final void write(final JarOutputStream jos) throws IOException {
+        jos.putNextEntry(new JarEntry(this.name));
+        jos.write(this.contents);
     }
 
     public abstract AbstractJarEntry accept(final JarEntryTransformer vistor);
