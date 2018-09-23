@@ -30,17 +30,12 @@
 
 package me.jamiemansfield.survey.jar;
 
-import me.jamiemansfield.survey.util.ThrowingSupplier;
-
-import java.io.IOException;
-import java.io.InputStream;
-
 public class JarResourceEntry extends AbstractJarEntry {
 
     private String extension;
 
-    public JarResourceEntry(final String name, final ThrowingSupplier<InputStream, IOException> stream) {
-        super(name, stream);
+    public JarResourceEntry(final String name, final byte[] contents) {
+        super(name, contents);
     }
 
     @Override

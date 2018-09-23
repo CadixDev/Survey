@@ -31,14 +31,12 @@
 package me.jamiemansfield.survey.jar;
 
 import me.jamiemansfield.survey.util.ByteStreams;
-import me.jamiemansfield.survey.util.ThrowingSupplier;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,13 +62,20 @@ public final class Jars {
     public static Stream<AbstractJarEntry> walk(final JarFile jarFile) {
         return jarFile.stream().filter(entry -> !entry.isDirectory()).map(entry -> {
             final String name = entry.getName();
-            final ThrowingSupplier<InputStream, IOException> stream = () -> jarFile.getInputStream(entry);
+            try (final InputStream stream = jarFile.getInputStream(entry)) {
+                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ByteStreams.copy(stream, baos);
 
-            if (entry.getName().endsWith(".class")) {
-                return new JarClassEntry(name, stream);
+                if (entry.getName().endsWith(".class")) {
+                    return new JarClassEntry(name, baos.toByteArray());
+                }
+                else {
+                    return new JarResourceEntry(name, baos.toByteArray());
+                }
             }
-            else {
-                return new JarResourceEntry(name, stream);
+            catch (final IOException ignored) {
+                // TODO: handle?
+                return null;
             }
         });
     }
@@ -98,11 +103,8 @@ public final class Jars {
 
         walk(jarFile).map(entry -> entry.accept(masterTransformer)).forEach(entry -> {
             try {
-                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ByteStreams.copy(entry.getStream(), baos);
-
                 jos.putNextEntry(entry.createEntry());
-                jos.write(baos.toByteArray());
+                jos.write(entry.getContents());
             }
             catch (final IOException ignored) {
                 // TODO: handle?
@@ -131,24 +133,18 @@ public final class Jars {
 
         @Override
         public JarClassEntry transform(final JarClassEntry entry) {
-            try (final InputStream stream = entry.getStream()) {
-                // Remap the class
-                final ClassReader reader = new ClassReader(stream);
-                final ClassWriter writer = new ClassWriter(reader, 0);
-                reader.accept(this.clsRemapper.apply(
-                        writer,
-                        this.remapper
-                ), 0);
+            // Remap the class
+            final ClassReader reader = new ClassReader(entry.getContents());
+            final ClassWriter writer = new ClassWriter(reader, 0);
+            reader.accept(this.clsRemapper.apply(
+                    writer,
+                    this.remapper
+            ), 0);
 
-                // Create the jar entry
-                final String originalName = entry.getName().substring(0, entry.getName().length() - ".class".length());
-                final String name = this.remapper.map(originalName) + ".class";
-                return new JarClassEntry(name, () -> new ByteArrayInputStream(writer.toByteArray()));
-            }
-            catch (final IOException ignored) {
-                // Incorrectly marked as a class probably :s
-                return entry;
-            }
+            // Create the jar entry
+            final String originalName = entry.getName().substring(0, entry.getName().length() - ".class".length());
+            final String name = this.remapper.map(originalName) + ".class";
+            return new JarClassEntry(name, writer.toByteArray());
         }
 
     }

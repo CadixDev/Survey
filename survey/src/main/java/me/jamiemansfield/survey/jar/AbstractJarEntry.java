@@ -30,10 +30,6 @@
 
 package me.jamiemansfield.survey.jar;
 
-import me.jamiemansfield.survey.util.ThrowingSupplier;
-
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.jar.JarEntry;
 
 /**
@@ -44,11 +40,11 @@ import java.util.jar.JarEntry;
 public abstract class AbstractJarEntry {
 
     protected final String name;
-    protected final ThrowingSupplier<InputStream, IOException> stream;
+    protected final byte[] contents;
 
-    protected AbstractJarEntry(final String name, final ThrowingSupplier<InputStream, IOException> stream) {
+    protected AbstractJarEntry(final String name, final byte[] contents) {
         this.name = name;
-        this.stream = stream;
+        this.contents = contents;
     }
 
     public final String getName() {
@@ -57,8 +53,8 @@ public abstract class AbstractJarEntry {
 
     public abstract String getExtension();
 
-    public final InputStream getStream() throws IOException {
-        return this.stream.get();
+    public final byte[] getContents() {
+        return this.contents;
     }
 
     public final JarEntry createEntry() {
