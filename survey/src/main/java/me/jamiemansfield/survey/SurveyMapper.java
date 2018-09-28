@@ -31,15 +31,22 @@
 package me.jamiemansfield.survey;
 
 import me.jamiemansfield.bombe.analysis.InheritanceProvider;
-import me.jamiemansfield.bombe.asm.analysis.SourceSetInheritanceProvider;
+import me.jamiemansfield.bombe.asm.analysis.ClassProviderInheritanceProvider;
+import me.jamiemansfield.bombe.asm.jar.RemappingJarEntryTransformer;
+import me.jamiemansfield.bombe.jar.Jars;
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.io.MappingFormat;
-import me.jamiemansfield.lorenz.io.MappingFormats;
-import me.jamiemansfield.lorenz.model.Mapping;
+import me.jamiemansfield.survey.jar.JarFileClassProvider;
 import me.jamiemansfield.survey.remapper.SurveyRemapper;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.Remapper;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 
 /**
  * A fluent interface for using Survey's {@link SurveyRemapper}.
@@ -76,36 +83,6 @@ public class SurveyMapper {
     }
 
     /**
-     * Loads mappings from the given path, using the SRG reader.
-     *
-     * @param mappingsPath The path to the mappings file
-     * @return {@code this}, for chaining
-     */
-    public SurveyMapper loadSrgMappings(final Path mappingsPath) {
-        return this.loadMappings(mappingsPath, MappingFormats.SRG);
-    }
-
-    /**
-     * Loads mappings from the given path, using the CSRG reader.
-     *
-     * @param mappingsPath The path to the mappings file
-     * @return {@code this}, for chaining
-     */
-    public SurveyMapper loadCSrgMappings(final Path mappingsPath) {
-        return this.loadMappings(mappingsPath, MappingFormats.CSRG);
-    }
-
-    /**
-     * Loads mappings from the given path, using the TSRG reader.
-     *
-     * @param mappingsPath The path to the mappings file
-     * @return {@code this}, for chaining
-     */
-    public SurveyMapper loadTSrgMappings(final Path mappingsPath) {
-        return this.loadMappings(mappingsPath, MappingFormats.TSRG);
-    }
-
-    /**
      * Remaps the given input jar, with the loaded mappings, and saves it to
      * the given output path.
      *
@@ -113,17 +90,39 @@ public class SurveyMapper {
      * @param output The output jar
      */
     public void remap(final Path input, final Path output) {
-        SurveyTool.remapJar(
-                input,
-                sources -> {
-                    final InheritanceProvider inheritance = new SourceSetInheritanceProvider(sources);
-                    return new SurveyRemapper(mappings, inheritance);
-                },
-                klassName -> mappings.getClassMapping(klassName)
-                        .map(Mapping::getFullDeobfuscatedName)
-                        .orElse(klassName),
-                output
-        );
+        try (final JarFile jarFile = new JarFile(input.toFile());
+             final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(output))) {
+            final InheritanceProvider inheritance = new ClassProviderInheritanceProvider(new JarFileClassProvider(jarFile));
+            Jars.transform(jarFile, jos, new RemappingJarEntryTransformer(
+                    new SurveyRemapper(mappings, inheritance),
+                    SurveyClassRemapper::new
+            ));
+        }
+        catch (final IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    // TODO: Use the new ASM7 stuff (that I introduced \o/)
+    private static class SurveyClassRemapper extends ClassRemapper {
+
+        public SurveyClassRemapper(final ClassVisitor classVisitor, final Remapper remapper) {
+            super(classVisitor, remapper);
+        }
+
+        @Override
+        public void visitInnerClass(final String name, final String outerName, final String innerName, final int access) {
+            // We need to change the inner name as ASM doesn't
+            final String mappedName = this.remapper.map(name);
+            super.visitInnerClass(
+                    name,
+                    outerName,
+                    // This check is for anonymous classes
+                    innerName == null ? null : mappedName.substring(mappedName.lastIndexOf('$') + 1),
+                    access
+            );
+        }
+
     }
 
 }

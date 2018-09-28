@@ -30,23 +30,18 @@
 
 package me.jamiemansfield.survey.cli;
 
-import static java.util.Arrays.asList;
-
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import me.jamiemansfield.bombe.asm.jar.JarWalker;
-import me.jamiemansfield.bombe.asm.jar.SourceSet;
-import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.survey.SurveyMapper;
 import me.jamiemansfield.survey.cli.util.PathValueConverter;
-import me.jamiemansfield.survey.mapper.IntermediaryMapper;
-import me.jamiemansfield.survey.mapper.IntermediaryMapperConfig;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static java.util.Arrays.asList;
 
 /**
  * The Main-Class behind Survey, a simple remapping tool.
@@ -64,7 +59,6 @@ public final class SurveyMain {
 
         // Modes
         final OptionSpec<Void> remapSpec = parser.accepts("remap", "Remap a jar");
-        final OptionSpec<Void> intMapSpec = parser.acceptsAll(asList("int-map", "intermediary-map"), "Create intermediary mappings for a jar");
 
         // Options
         final OptionSpec<Path> jarInPathSpec = parser.accepts("jar-in", "The location of the jar to map")
@@ -80,13 +74,6 @@ public final class SurveyMain {
                 .defaultsTo(MappingFormat.SRG);
         final OptionSpec<Path> jarOutPathSpec = parser.accepts("jar-out", "Where to save the mapped jar")
                 .requiredIf(remapSpec)
-                .withOptionalArg()
-                .withValuesConvertedBy(PathValueConverter.INSTANCE);
-        final OptionSpec<Path> mappingsOutPathSpec = parser.accepts("mappings-out", "Where to save the intermediary mappings")
-                .requiredIf(intMapSpec)
-                .withOptionalArg()
-                .withValuesConvertedBy(PathValueConverter.INSTANCE);
-        final OptionSpec<Path> intMapConfigPathSpec = parser.accepts("int-map-config", "Where to save the intermediary mappings")
                 .withOptionalArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
 
@@ -130,55 +117,6 @@ public final class SurveyMain {
             new SurveyMapper()
                     .loadMappings(mappingsPath, mappingFormat.get())
                     .remap(jarInPath, jarOutPath);
-        }
-        else if (options.has(intMapSpec)) {
-            final Path mappingsOutPath = options.valueOf(mappingsOutPathSpec);
-
-            final SourceSet sources = new SourceSet();
-            new JarWalker(jarInPath).walk(sources);
-
-            final MappingSet mappings = MappingSet.create();
-
-            if (options.has(mappingsPathSpec)) {
-                final Path mappingsPath = options.valueOf(mappingsPathSpec);
-
-                if (Files.notExists(mappingsPath)) {
-                    throw new RuntimeException("Input mappings does not exist!");
-                }
-
-                try {
-                    mappingFormat.get().read(mappings, mappingsPath);
-                }
-                catch (final IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-            final IntermediaryMapperConfig config;
-
-            if (options.has(intMapConfigPathSpec)) {
-                final Path intMapConfigPath = options.valueOf(intMapConfigPathSpec);
-
-                if (Files.notExists(intMapConfigPath)) {
-                    throw new RuntimeException("Input configuration does not exist!");
-                }
-
-                config = IntermediaryMapperConfig.read(intMapConfigPath);
-            }
-            else {
-                config = IntermediaryMapperConfig.create();
-            }
-
-            new IntermediaryMapper(config, mappings, sources).map();
-
-            if (options.has(intMapConfigPathSpec)) config.save(options.valueOf(intMapConfigPathSpec));
-
-            try {
-                mappingFormat.get().write(mappings, mappingsOutPath);
-            }
-            catch (final IOException ex) {
-                ex.printStackTrace();
-            }
         }
         else {
             try {

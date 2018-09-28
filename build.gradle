@@ -22,6 +22,11 @@ subprojects {
 
     repositories {
         mavenCentral()
+        if (lorenzVersion.endsWith("-SNAPSHOT")) {
+            maven {
+                url 'https://oss.sonatype.org/content/groups/public/'
+            }
+        }
     }
 
     dependencies {
