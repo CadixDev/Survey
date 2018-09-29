@@ -38,6 +38,7 @@ import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.io.MappingFormat;
 import me.jamiemansfield.survey.jar.JarFileClassProvider;
 import me.jamiemansfield.survey.jar.ManifestRemappingTransformer;
+import me.jamiemansfield.survey.jar.ServiceProviderConfigurationRemappingTransformer;
 import me.jamiemansfield.survey.remapper.SurveyRemapper;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.commons.ClassRemapper;
@@ -99,7 +100,8 @@ public class SurveyMapper {
                             new SurveyRemapper(this.mappings, inheritance),
                             SurveyClassRemapper::new
                     ),
-                    new ManifestRemappingTransformer(this.mappings)
+                    new ManifestRemappingTransformer(this.mappings),
+                    new ServiceProviderConfigurationRemappingTransformer(this.mappings)
             );
         }
         catch (final IOException ex) {
