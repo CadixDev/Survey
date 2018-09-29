@@ -28,41 +28,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package me.jamiemansfield.survey.jar;
+package me.jamiemansfield.survey.test.jar;
 
-import me.jamiemansfield.bombe.asm.jar.ClassProvider;
-import me.jamiemansfield.bombe.util.ByteStreams;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.ByteArrayOutputStream;
+import me.jamiemansfield.bombe.jar.JarEntryTransformer;
+import me.jamiemansfield.bombe.jar.JarManifestEntry;
+import me.jamiemansfield.lorenz.MappingSet;
+import me.jamiemansfield.survey.jar.ManifestRemappingTransformer;
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
-// TODO: Move to Bombe
-public class JarFileClassProvider implements ClassProvider {
+/**
+ * Unit tests pertaining to {@link ManifestRemappingTransformer}.
+ */
+public final class ManifestRemappingTransformerTests {
 
-    private final JarFile jar;
+    private static final MappingSet MAPPINGS = MappingSet.create();
+    private static final JarEntryTransformer TRANSFORMER = new ManifestRemappingTransformer(MAPPINGS);
 
-    public JarFileClassProvider(final JarFile jar) {
-        this.jar = jar;
+    static {
+        MAPPINGS.getOrCreateTopLevelClassMapping("demo/Demo")
+                .setDeobfuscatedName("demo/RemappedDemo");
     }
 
-    @Override
-    public byte[] get(final String klass) {
-        final String internalName = klass + ".class";
+    private static String getMainClass(final Manifest manifest) {
+        return manifest.getMainAttributes().getValue("Main-Class");
+    }
 
-        final JarEntry entry = jar.getJarEntry(internalName);
-        if (entry == null) return null;
+    @Test
+    public void remapsMainClass() throws IOException {
+        final Manifest obfManifest = new Manifest();
+        {
+            obfManifest.getMainAttributes().putValue("Manifest-Version", "1.0");
+            obfManifest.getMainAttributes().putValue("Main-Class", "demo.Demo");
+        }
 
-        try (final InputStream in = jar.getInputStream(entry)) {
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ByteStreams.copy(in, baos);
-            return baos.toByteArray();
-        }
-        catch (final IOException ignored) {
-            return null;
-        }
+        final JarManifestEntry manifestEntry = TRANSFORMER.transform(new JarManifestEntry(obfManifest));
+        final Manifest deobfManifest = manifestEntry.getManifest();
+        assertEquals("demo.RemappedDemo", getMainClass(deobfManifest));
     }
 
 }

@@ -31,15 +31,12 @@
 package me.jamiemansfield.survey.jar;
 
 import me.jamiemansfield.bombe.jar.JarEntryTransformer;
-import me.jamiemansfield.bombe.jar.JarResourceEntry;
+import me.jamiemansfield.bombe.jar.JarServiceProviderConfigurationEntry;
+import me.jamiemansfield.bombe.jar.ServiceProviderConfiguration;
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.model.ClassMapping;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -58,41 +55,25 @@ public class ServiceProviderConfigurationRemappingTransformer implements JarEntr
     }
 
     @Override
-    public JarResourceEntry transform(final JarResourceEntry entry) {
-        if (Objects.equals("META-INF/services", entry.getPackage())) {
-            final String obfServiceName = entry.getName().substring("META-INF/services".length());
-            final ServiceProviderConfiguration obfService = new ServiceProviderConfiguration(obfServiceName);
-            try {
-                obfService.read(new ByteArrayInputStream(entry.getContents()));
-            }
-            catch (final IOException ignored) {
-            }
+    public JarServiceProviderConfigurationEntry transform(final JarServiceProviderConfigurationEntry entry) {
+        final ServiceProviderConfiguration obfService = entry.getConfig();
 
-            final String deobfServiceName = this.mappings.getClassMapping(obfServiceName.replace('.', '/'))
-                    .map(ClassMapping::getFullDeobfuscatedName)
-                    .orElse(obfServiceName)
-                    .replace('/', '.');
-            final AtomicReference<String> currentProvider = new AtomicReference<>();
-            final List<String> deobfProviders = obfService.getProviders().stream()
-                    .peek(currentProvider::set)
-                    .map(this.mappings::getClassMapping)
-                    .map(mapping -> mapping.map(ClassMapping::getFullDeobfuscatedName))
-                    .map(mapping -> mapping.orElse(currentProvider.get()))
-                    .map(mapping -> mapping.replace('/', '.'))
-                    .collect(Collectors.toList());
-            final ServiceProviderConfiguration deobfService = new ServiceProviderConfiguration(
-                    deobfServiceName,
-                    deobfProviders
-            );
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try {
-                deobfService.write(baos);
-            }
-            catch (final IOException ignored) {
-            }
-            return new JarResourceEntry(deobfServiceName.replace('.', '/'), baos.toByteArray());
-        }
-        return entry;
+        final String deobfServiceName = this.mappings.getClassMapping(obfService.getService().replace('.', '/'))
+                .map(ClassMapping::getFullDeobfuscatedName)
+                .orElse(obfService.getService())
+                .replace('/', '.');
+        final AtomicReference<String> currentProvider = new AtomicReference<>();
+        final List<String> deobfProviders = obfService.getProviders().stream()
+                .peek(currentProvider::set)
+                .map(this.mappings::getClassMapping)
+                .map(mapping -> mapping.map(ClassMapping::getFullDeobfuscatedName))
+                .map(mapping -> mapping.orElse(currentProvider.get()))
+                .map(mapping -> mapping.replace('/', '.'))
+                .collect(Collectors.toList());
+        final ServiceProviderConfiguration deobfService = new ServiceProviderConfiguration(
+                deobfServiceName,
+                deobfProviders
+        );
+        return new JarServiceProviderConfigurationEntry(deobfService);
     }
-
 }

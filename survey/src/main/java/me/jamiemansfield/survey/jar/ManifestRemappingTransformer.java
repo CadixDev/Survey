@@ -31,15 +31,8 @@
 package me.jamiemansfield.survey.jar;
 
 import me.jamiemansfield.bombe.jar.JarEntryTransformer;
-import me.jamiemansfield.bombe.jar.JarResourceEntry;
+import me.jamiemansfield.bombe.jar.JarManifestEntry;
 import me.jamiemansfield.lorenz.MappingSet;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
-import java.util.jar.Manifest;
 
 /**
  * A jar entry transformer, for remapping manifest entries.
@@ -55,34 +48,16 @@ public class ManifestRemappingTransformer implements JarEntryTransformer {
         this.mappings = mappings;
     }
 
-    // TODO: Introduce a specific JarManifestEntry class?
     @Override
-    public JarResourceEntry transform(final JarResourceEntry entry) {
-        if (Objects.equals("META-INF/MANIFEST.MF", entry.getName())) {
-            final Manifest manifest = new Manifest();
+    public JarManifestEntry transform(final JarManifestEntry entry) {
+        // Remap the Main-Class attribute
+        final String mainClassObf = entry.getManifest().getMainAttributes().getValue("Main-Class");
+        this.mappings.getClassMapping(mainClassObf).ifPresent(mapping -> {
+            final String mainClassDeobf = mapping.getFullDeobfuscatedName().replace('/', '.');
+            entry.getManifest().getMainAttributes().putValue("Main-Class", mainClassDeobf);
+        });
 
-            // Read original manifest
-            try (final InputStream is = new ByteArrayInputStream(entry.getContents())) {
-                manifest.read(is);
-            }
-            catch (final IOException ignored) {
-            }
-
-            // Remap the Main-Class attribute
-            final String mainClassObf = manifest.getMainAttributes().getValue("Main-Class");
-            this.mappings.getClassMapping(mainClassObf).ifPresent(mapping -> {
-                final String mainClassDeobf = mapping.getFullDeobfuscatedName().replace('/', '.');
-                manifest.getMainAttributes().putValue("Main-Class", mainClassDeobf);
-            });
-
-            // Return the new jar entry
-            try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                manifest.write(baos);
-                return new JarResourceEntry(entry.getName(), baos.toByteArray());
-            }
-            catch (final IOException ignored) {
-            }
-        }
+        // Since Manifest is mutable, we need'nt create a new entry \o/
         return entry;
     }
 

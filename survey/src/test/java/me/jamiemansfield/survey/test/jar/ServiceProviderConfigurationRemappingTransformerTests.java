@@ -31,50 +31,46 @@
 package me.jamiemansfield.survey.test.jar;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import me.jamiemansfield.bombe.jar.JarEntryTransformer;
-import me.jamiemansfield.bombe.jar.JarResourceEntry;
+import me.jamiemansfield.bombe.jar.JarServiceProviderConfigurationEntry;
+import me.jamiemansfield.bombe.jar.ServiceProviderConfiguration;
 import me.jamiemansfield.lorenz.MappingSet;
-import me.jamiemansfield.survey.jar.ManifestRemappingTransformer;
+import me.jamiemansfield.survey.jar.ServiceProviderConfigurationRemappingTransformer;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.jar.Manifest;
+import java.util.Arrays;
 
 /**
- * Unit tests pertaining to {@link ManifestRemappingTransformer}.
+ * Unit tests pertaining to {@link ServiceProviderConfigurationRemappingTransformer}.
  */
-public final class ManifestRemappingTransformerTest {
+public final class ServiceProviderConfigurationRemappingTransformerTests {
 
     private static final MappingSet MAPPINGS = MappingSet.create();
-    private static final JarEntryTransformer TRANSFORMER = new ManifestRemappingTransformer(MAPPINGS);
+    private static final ServiceProviderConfigurationRemappingTransformer TRANSFORMER =
+            new ServiceProviderConfigurationRemappingTransformer(MAPPINGS);
 
     static {
         MAPPINGS.getOrCreateTopLevelClassMapping("demo/Demo")
                 .setDeobfuscatedName("demo/RemappedDemo");
-    }
-
-    private static String getMainClass(final Manifest manifest) {
-        return manifest.getMainAttributes().getValue("Main-Class");
+        MAPPINGS.getOrCreateTopLevelClassMapping("demo/DemoImpl")
+                .setDeobfuscatedName("demo/RemappedDemoImpl");
+        MAPPINGS.getOrCreateTopLevelClassMapping("demo/DemoAltImpl")
+                .setDeobfuscatedName("demo/RemappedDemoAltImpl");
     }
 
     @Test
-    public void remapsMainClass() throws IOException {
-        final ByteArrayOutputStream obfBaos = new ByteArrayOutputStream();
-        {
-            final Manifest obfManifest = new Manifest();
-            obfManifest.getMainAttributes().putValue("Manifest-Version", "1.0");
-            obfManifest.getMainAttributes().putValue("Main-Class", "demo.Demo");
-            obfManifest.write(obfBaos);
-        }
-
-        final JarResourceEntry manifestEntry =
-                TRANSFORMER.transform(new JarResourceEntry("META-INF/MANIFEST.MF", obfBaos.toByteArray()));
-        final Manifest deobfManifest = new Manifest();
-        deobfManifest.read(new ByteArrayInputStream(manifestEntry.getContents()));
-        assertEquals("demo.RemappedDemo", getMainClass(deobfManifest));
+    public void remapsConfig() {
+        final ServiceProviderConfiguration obfConfig = new ServiceProviderConfiguration("demo.Demo", Arrays.asList(
+                "demo.DemoImpl",
+                "demo.DemoAltImpl"
+        ));
+        final ServiceProviderConfiguration deobfConfig =
+                TRANSFORMER.transform(new JarServiceProviderConfigurationEntry(obfConfig)).getConfig();
+        assertEquals("demo.RemappedDemo", deobfConfig.getService());
+        assertEquals(2, deobfConfig.getProviders().size());
+        assertTrue(deobfConfig.getProviders().contains("demo.RemappedDemoImpl"), "Provider not present!");
+        assertTrue(deobfConfig.getProviders().contains("demo.RemappedDemoAltImpl"), "Provider not present!");
     }
 
 }
