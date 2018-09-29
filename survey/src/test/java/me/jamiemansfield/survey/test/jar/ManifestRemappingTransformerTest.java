@@ -28,62 +28,53 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package me.jamiemansfield.survey.jar;
+package me.jamiemansfield.survey.test.jar;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import me.jamiemansfield.bombe.jar.JarEntryTransformer;
 import me.jamiemansfield.bombe.jar.JarResourceEntry;
 import me.jamiemansfield.lorenz.MappingSet;
+import me.jamiemansfield.survey.jar.ManifestRemappingTransformer;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
 import java.util.jar.Manifest;
 
 /**
- * A jar entry transformer, for remapping manifest entries.
- *
- * @author Jamie Mansfield
- * @since 0.2.0
+ * Unit tests pertaining to {@link ManifestRemappingTransformer}.
  */
-public class ManifestRemappingTransformer implements JarEntryTransformer {
+public final class ManifestRemappingTransformerTest {
 
-    private final MappingSet mappings;
+    private static final MappingSet MAPPINGS = MappingSet.create();
+    private static final JarEntryTransformer TRANSFORMER = new ManifestRemappingTransformer(MAPPINGS);
 
-    public ManifestRemappingTransformer(final MappingSet mappings) {
-        this.mappings = mappings;
+    static {
+        MAPPINGS.getOrCreateTopLevelClassMapping("demo/Demo")
+                .setDeobfuscatedName("demo/RemappedDemo");
     }
 
-    // TODO: Introduce a specific JarManifestEntry class?
-    @Override
-    public JarResourceEntry transform(final JarResourceEntry entry) {
-        if (Objects.equals("META-INF/MANIFEST.MF", entry.getName())) {
-            final Manifest manifest = new Manifest();
+    private static String getMainClass(final Manifest manifest) {
+        return manifest.getMainAttributes().getValue("Main-Class");
+    }
 
-            // Read original manifest
-            try (final InputStream is = new ByteArrayInputStream(entry.getContents())) {
-                manifest.read(is);
-            }
-            catch (final IOException ignored) {
-            }
-
-            // Remap the Main-Class attribute
-            final String mainClassObf = manifest.getMainAttributes().getValue("Main-Class");
-            this.mappings.getClassMapping(mainClassObf).ifPresent(mapping -> {
-                final String mainClassDeobf = mapping.getFullDeobfuscatedName().replace('/', '.');
-                manifest.getMainAttributes().putValue("Main-Class", mainClassDeobf);
-            });
-
-            // Return the new jar entry
-            try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                manifest.write(baos);
-                return new JarResourceEntry(entry.getName(), baos.toByteArray());
-            }
-            catch (final IOException ignored) {
-            }
+    @Test
+    public void remapsMainClass() throws IOException {
+        final ByteArrayOutputStream obfBaos = new ByteArrayOutputStream();
+        {
+            final Manifest obfManifest = new Manifest();
+            obfManifest.getMainAttributes().putValue("Manifest-Version", "1.0");
+            obfManifest.getMainAttributes().putValue("Main-Class", "demo.Demo");
+            obfManifest.write(obfBaos);
         }
-        return entry;
+
+        final JarResourceEntry manifestEntry =
+                TRANSFORMER.transform(new JarResourceEntry("META-INF/MANIFEST.MF", obfBaos.toByteArray()));
+        final Manifest deobfManifest = new Manifest();
+        deobfManifest.read(new ByteArrayInputStream(manifestEntry.getContents()));
+        assertEquals("demo.RemappedDemo", getMainClass(deobfManifest));
     }
 
 }
