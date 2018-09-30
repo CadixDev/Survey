@@ -32,13 +32,11 @@ package me.jamiemansfield.survey;
 
 import me.jamiemansfield.bombe.analysis.InheritanceProvider;
 import me.jamiemansfield.bombe.asm.analysis.ClassProviderInheritanceProvider;
+import me.jamiemansfield.bombe.asm.jar.JarEntryRemappingTransformer;
 import me.jamiemansfield.bombe.asm.jar.JarFileClassProvider;
-import me.jamiemansfield.bombe.asm.jar.RemappingJarEntryTransformer;
 import me.jamiemansfield.bombe.jar.Jars;
 import me.jamiemansfield.lorenz.MappingSet;
 import me.jamiemansfield.lorenz.io.MappingFormat;
-import me.jamiemansfield.survey.jar.ManifestRemappingTransformer;
-import me.jamiemansfield.survey.jar.ServiceProviderConfigurationRemappingTransformer;
 import me.jamiemansfield.survey.remapper.SurveyRemapper;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.commons.ClassRemapper;
@@ -96,12 +94,10 @@ public class SurveyMapper {
              final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(output))) {
             final InheritanceProvider inheritance = new ClassProviderInheritanceProvider(new JarFileClassProvider(jarFile));
             Jars.transform(jarFile, jos,
-                    new RemappingJarEntryTransformer(
+                    new JarEntryRemappingTransformer(
                             new SurveyRemapper(this.mappings, inheritance),
                             SurveyClassRemapper::new
-                    ),
-                    new ManifestRemappingTransformer(this.mappings),
-                    new ServiceProviderConfigurationRemappingTransformer(this.mappings)
+                    )
             );
         }
         catch (final IOException ex) {
