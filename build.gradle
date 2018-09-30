@@ -22,7 +22,7 @@ subprojects {
 
     repositories {
         mavenCentral()
-        if (lorenzVersion.endsWith("-SNAPSHOT")) {
+        if (lorenzVersion.endsWith('-SNAPSHOT')) {
             maven {
                 url 'https://oss.sonatype.org/content/groups/public/'
             }
@@ -102,20 +102,20 @@ subprojects {
                         inceptionYear = project.inceptionYear
 
                         scm {
-                            url = 'https://github.com/jamiemansfield/Survey'
-                            connection = 'scm:git:https://github.com/jamiemansfield/Survey.git'
-                            developerConnection = 'scm:git:git@github.com:jamiemansfield/Survey.git'
+                            url = 'https://github.com/CadixDev/Survey'
+                            connection = 'scm:git:https://github.com/CadixDev/Survey.git'
+                            developerConnection = 'scm:git:git@github.com:CadixDev/Survey.git'
                         }
 
                         issueManagement {
                             system = 'GitHub'
-                            url = 'https://github.com/jamiemansfield/Survey/issues'
+                            url = 'https://github.com/CadixDev/Survey/issues'
                         }
 
                         licenses {
                             license {
-                                name = 'BSD 3-Clause'
-                                url = 'https://opensource.org/licenses/BSD-3-Clause'
+                                name = 'Mozilla Public License 2.0'
+                                url = 'https://opensource.org/licenses/MPL-2.0'
                                 distribution = 'repo'
                             }
                         }

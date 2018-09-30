@@ -1,19 +1,30 @@
 Survey
 ======
 
-Survey is a minimalistic jar remapper, built on [ASM] and [Lorenz]. It is designed in such
-a way that the ClassRemapper component could easily be integrated into another workflow.
+Survey is a binary transformation and -remapping framework for Java, built on [ASM] and
+[Lorenz].
 
-## CLI
+## Features
 
-Survey comes with a CLI for remapping jar files, with SRG mappings (in the future, more
-formats will be available).
+Survey is a powerful, flexible tool that can be used in a variety of workflows - both
+programmatic (through Survey's simple API), and through the CLI.
 
-> java -jar survey.jar --remap --jar-in obf.jar --mappings mappings.srg --jar-out deobf.jar
+- Apply de-obfuscations mappings to a jar file.
+  - Specific focus on producing *valid*, *runnable* output
+    - Directory entries will be created for new directories, and obsolete ones will be
+      removed (this resolves an issue with running programs using log4j2)
+    - The MANIFEST will be remapped, specifically the `Main-Class` attribute
+    - Service Provider Configurations will be remapped
+    
+Survey is also designed to be highly safe, and is backed by unit tests covering vast amounts
+of its functionality (the majority of these tests are in the larger upstream projects -
+[Lorenz] and [Bombe]).
 
 ## License
 
-Survey is BSD 3-Clause licensed.
+Survey is made available under the Mozilla Public License 2.0, you can find a copy on this
+repository: [LICENSE.txt](LICENSE.txt).
 
 [ASM]: http://asm.ow2.org/
-[Lorenz]: https://github.com/jamiemansfield/Lorenz
+[Lorenz]: https://github.com/CadixDev/Lorenz
+[Bombe]: https://github.com/CadixDev/Bombe
