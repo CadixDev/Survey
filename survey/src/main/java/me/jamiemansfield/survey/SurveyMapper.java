@@ -30,6 +30,7 @@
 
 package me.jamiemansfield.survey;
 
+import me.jamiemansfield.bombe.analysis.CachingInheritanceProvider;
 import me.jamiemansfield.bombe.analysis.InheritanceProvider;
 import me.jamiemansfield.bombe.asm.analysis.ClassProviderInheritanceProvider;
 import me.jamiemansfield.bombe.asm.jar.JarEntryRemappingTransformer;
@@ -92,7 +93,8 @@ public class SurveyMapper {
     public void remap(final Path input, final Path output) {
         try (final JarFile jarFile = new JarFile(input.toFile());
              final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(output))) {
-            final InheritanceProvider inheritance = new ClassProviderInheritanceProvider(new JarFileClassProvider(jarFile));
+            final InheritanceProvider inheritance =
+                    new CachingInheritanceProvider(new ClassProviderInheritanceProvider(new JarFileClassProvider(jarFile)));
             Jars.transform(jarFile, jos,
                     new JarEntryRemappingTransformer(
                             new SurveyRemapper(this.mappings, inheritance),
