@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package me.jamiemansfield.survey.remapper;
+package org.cadixdev.survey.remapper;
 
-import me.jamiemansfield.bombe.analysis.InheritanceProvider;
-import me.jamiemansfield.lorenz.MappingSet;
-import me.jamiemansfield.lorenz.asm.LorenzRemapper;
+import org.cadixdev.bombe.analysis.InheritanceProvider;
+import org.cadixdev.lorenz.MappingSet;
+import org.cadixdev.lorenz.asm.LorenzRemapper;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.commons.SignatureRemapper;
 import org.objectweb.asm.signature.SignatureVisitor;

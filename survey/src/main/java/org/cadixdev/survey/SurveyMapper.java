@@ -4,17 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package me.jamiemansfield.survey;
+package org.cadixdev.survey;
 
-import me.jamiemansfield.bombe.analysis.CachingInheritanceProvider;
-import me.jamiemansfield.bombe.analysis.InheritanceProvider;
-import me.jamiemansfield.bombe.asm.analysis.ClassProviderInheritanceProvider;
-import me.jamiemansfield.bombe.asm.jar.JarEntryRemappingTransformer;
-import me.jamiemansfield.bombe.asm.jar.JarFileClassProvider;
-import me.jamiemansfield.bombe.jar.Jars;
-import me.jamiemansfield.lorenz.MappingSet;
-import me.jamiemansfield.lorenz.io.MappingFormat;
-import me.jamiemansfield.survey.remapper.SurveyRemapper;
+import org.cadixdev.survey.remapper.SurveyRemapper;
+import org.cadixdev.bombe.analysis.CachingInheritanceProvider;
+import org.cadixdev.bombe.analysis.InheritanceProvider;
+import org.cadixdev.bombe.asm.analysis.ClassProviderInheritanceProvider;
+import org.cadixdev.bombe.asm.jar.JarEntryRemappingTransformer;
+import org.cadixdev.bombe.asm.jar.JarFileClassProvider;
+import org.cadixdev.bombe.jar.Jars;
+import org.cadixdev.lorenz.MappingSet;
+import org.cadixdev.lorenz.io.MappingFormat;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;

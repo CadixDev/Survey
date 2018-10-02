@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package me.jamiemansfield.survey.cli.util;
+package org.cadixdev.survey.cli.util;
 
 import joptsimple.ValueConverter;
 

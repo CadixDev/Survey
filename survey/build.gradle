@@ -1,7 +1,7 @@
 dependencies {
     // Mappings
-    compile "me.jamiemansfield:lorenz:${rootProject.lorenzVersion}"
-    compile "me.jamiemansfield:lorenz-asm:${rootProject.lorenzVersion}"
+    compile "org.cadixdev:lorenz:${rootProject.lorenzVersion}"
+    compile "org.cadixdev:lorenz-asm:${rootProject.lorenzVersion}"
 
     // CSV
     compile 'me.jamiemansfield:csv:0.1.0'

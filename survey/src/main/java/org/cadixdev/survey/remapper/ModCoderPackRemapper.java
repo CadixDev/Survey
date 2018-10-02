@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package me.jamiemansfield.survey.remapper;
+package org.cadixdev.survey.remapper;
 
 import me.jamiemansfield.csv.CsvRow;
 import org.objectweb.asm.commons.Remapper;

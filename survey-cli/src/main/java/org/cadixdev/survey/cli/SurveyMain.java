@@ -4,20 +4,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package me.jamiemansfield.survey.cli;
+package org.cadixdev.survey.cli;
+
+import static java.util.Arrays.asList;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import me.jamiemansfield.survey.SurveyMapper;
-import me.jamiemansfield.survey.cli.util.PathValueConverter;
+import org.cadixdev.survey.SurveyMapper;
+import org.cadixdev.survey.cli.util.PathValueConverter;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import static java.util.Arrays.asList;
 
 /**
  * The Main-Class behind Survey, a simple remapping tool.

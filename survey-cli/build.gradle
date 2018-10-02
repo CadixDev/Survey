@@ -12,7 +12,7 @@ jar {
         attributes(
                 'Implementation-Title': name,
                 'Implementation-Version': version,
-                'Main-Class': 'me.jamiemansfield.survey.cli.SurveyMain'
+                'Main-Class': 'org.cadixdev.survey.cli.SurveyMain'
         )
     }
 }

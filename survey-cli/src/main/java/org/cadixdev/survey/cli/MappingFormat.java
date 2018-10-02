@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package me.jamiemansfield.survey.cli;
+package org.cadixdev.survey.cli;
 
-import me.jamiemansfield.lorenz.io.MappingFormats;
+import org.cadixdev.lorenz.io.MappingFormats;
 
 /**
  * The many mapping formats that are supported by Survey's CLI, all provided
@@ -34,9 +34,9 @@ public enum MappingFormat {
 
     ;
 
-    private final me.jamiemansfield.lorenz.io.MappingFormat format;
+    private final org.cadixdev.lorenz.io.MappingFormat format;
 
-    MappingFormat(final me.jamiemansfield.lorenz.io.MappingFormat format) {
+    MappingFormat(final org.cadixdev.lorenz.io.MappingFormat format) {
         this.format = format;
     }
 
@@ -45,7 +45,7 @@ public enum MappingFormat {
      *
      * @return The mapping format
      */
-    public me.jamiemansfield.lorenz.io.MappingFormat get() {
+    public org.cadixdev.lorenz.io.MappingFormat get() {
         return this.format;
     }
 
