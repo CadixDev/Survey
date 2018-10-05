@@ -75,14 +75,14 @@ public final class SurveyMain {
             return;
         }
 
-        final Path jarInPath = options.valueOf(jarInPathSpec);
-        final MappingFormat mappingFormat = options.valueOf(mappingsFormatSpec);
-
-        if (Files.notExists(jarInPath)) {
-            throw new RuntimeException("Input jar does not exist!");
-        }
-
         if (options.has(remapSpec)) {
+            final Path jarInPath = options.valueOf(jarInPathSpec);
+            final MappingFormat mappingFormat = options.valueOf(mappingsFormatSpec);
+
+            if (Files.notExists(jarInPath)) {
+                throw new RuntimeException("Input jar does not exist!");
+            }
+
             final Path mappingsPath = options.valueOf(mappingsPathSpec);
             final Path jarOutPath = options.valueOf(jarOutPathSpec);
 
