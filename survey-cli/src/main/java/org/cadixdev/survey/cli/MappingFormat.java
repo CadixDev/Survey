@@ -18,19 +18,34 @@ import org.cadixdev.lorenz.io.MappingFormats;
 public enum MappingFormat {
 
     /**
-     * The standard SRG mapping format.
+     * @see MappingFormats#SRG
      */
     SRG(MappingFormats.SRG),
 
     /**
-     * The compact SRG mapping format, used by Spigot.
+     * @see MappingFormats#CSRG
      */
     CSRG(MappingFormats.CSRG),
 
     /**
-     * The tabbed SRG mapping format, used by MCPConfig.
+     * @see MappingFormats#TSRG
      */
     TSRG(MappingFormats.TSRG),
+
+    /**
+     * @see MappingFormats#KIN
+     */
+    KIN(MappingFormats.KIN),
+
+    /**
+     * @see MappingFormats#JAM
+     */
+    JAM(MappingFormats.JAM),
+
+    /**
+     * @see MappingFormats#ENIGMA
+     */
+    ENIGMA(MappingFormats.ENIGMA),
 
     ;
 
