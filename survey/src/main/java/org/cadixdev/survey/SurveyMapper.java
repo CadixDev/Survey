@@ -6,7 +6,6 @@
 
 package org.cadixdev.survey;
 
-import org.cadixdev.survey.remapper.SurveyRemapper;
 import org.cadixdev.bombe.analysis.CachingInheritanceProvider;
 import org.cadixdev.bombe.analysis.InheritanceProvider;
 import org.cadixdev.bombe.asm.analysis.ClassProviderInheritanceProvider;
@@ -15,9 +14,7 @@ import org.cadixdev.bombe.asm.jar.JarFileClassProvider;
 import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.io.MappingFormat;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.commons.ClassRemapper;
-import org.objectweb.asm.commons.Remapper;
+import org.cadixdev.survey.remapper.SurveyRemapper;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -73,36 +70,13 @@ public class SurveyMapper {
                     new CachingInheritanceProvider(new ClassProviderInheritanceProvider(new JarFileClassProvider(jarFile)));
             Jars.transform(jarFile, jos,
                     new JarEntryRemappingTransformer(
-                            new SurveyRemapper(this.mappings, inheritance),
-                            SurveyClassRemapper::new
+                            new SurveyRemapper(this.mappings, inheritance)
                     )
             );
         }
         catch (final IOException ex) {
             ex.printStackTrace();
         }
-    }
-
-    // TODO: Use the new ASM7 stuff (that I introduced \o/)
-    private static class SurveyClassRemapper extends ClassRemapper {
-
-        public SurveyClassRemapper(final ClassVisitor classVisitor, final Remapper remapper) {
-            super(classVisitor, remapper);
-        }
-
-        @Override
-        public void visitInnerClass(final String name, final String outerName, final String innerName, final int access) {
-            // We need to change the inner name as ASM doesn't
-            final String mappedName = this.remapper.map(name);
-            super.visitInnerClass(
-                    name,
-                    outerName,
-                    // This check is for anonymous classes
-                    innerName == null ? null : mappedName.substring(mappedName.lastIndexOf('$') + 1),
-                    access
-            );
-        }
-
     }
 
 }
