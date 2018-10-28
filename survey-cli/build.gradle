@@ -1,10 +1,19 @@
 apply plugin: 'com.github.johnrengelman.plugin-shadow'
+apply plugin: 'net.kyori.blossom'
 
 dependencies {
     compile project(':survey')
 
     // CLI
     compile 'net.sf.jopt-simple:jopt-simple:5.0.4'
+}
+
+blossom {
+    // Files
+    def main = 'src/main/java/org/cadixdev/survey/cli/SurveyMain.java'
+
+    // Replacements
+    replaceToken '${VERSION}', version, main
 }
 
 jar {
