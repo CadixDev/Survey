@@ -85,7 +85,8 @@ public class EnumNameMapper extends ClassVisitor {
 
         private final MappingSet mappings;
         private final ObjectType klass;
-        private boolean incomingName = false;
+
+        private boolean expecting = true;
         private String name = null;
 
         public EnumMappingMethodVisitor(final MethodVisitor mv, final ObjectType klass, final MappingSet mappings) {
@@ -95,18 +96,9 @@ public class EnumNameMapper extends ClassVisitor {
         }
 
         @Override
-        public void visitTypeInsn(final int opcode, final String type) {
-            if (opcode == Opcodes.NEW) {
-                this.incomingName = true;
-                this.name = null;
-            }
-            super.visitTypeInsn(opcode, type);
-        }
-
-        @Override
         public void visitLdcInsn(final Object cst) {
-            if (this.incomingName && this.name == null && cst instanceof String) {
-                this.incomingName = false;
+            if (this.expecting && cst instanceof String) {
+                this.expecting = false;
                 this.name = (String) cst;
             }
             super.visitLdcInsn(cst);
@@ -126,6 +118,7 @@ public class EnumNameMapper extends ClassVisitor {
                         .setDeobfuscatedName(this.name);
 
                 this.name = null;
+                this.expecting = true;
             }
             super.visitFieldInsn(opcode, owner, name, desc);
         }
