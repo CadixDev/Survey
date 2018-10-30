@@ -35,7 +35,7 @@ public class GlobalMapperConfig {
     public List<AbstractMapper<?>> createMappers(final MappingSet mappings) {
         final List<AbstractMapper<?>> mappers = new ArrayList<>();
         this.mapperConfigs.forEach((regis, configs) -> configs.stream()
-                .map(config -> regis.createMapper(mappings, configs))
+                .map(config -> regis.createMapper(mappings, config))
                 .forEach(mappers::add));
         return mappers;
     }

@@ -40,7 +40,7 @@ public final class SurveyMain {
         final OptionSpec<Void> helpSpec = parser.acceptsAll(asList("?", "help"), "Show the help").forHelp();
         final OptionSpec<Void> versionSpec = parser.accepts("version", "Shows the version");
         final OptionSpec<Void> remapSpec = parser.accepts("remap", "Remap a jar");
-        // TODO: mapSpec
+        final OptionSpec<Void> mapSpec = parser.accepts("map", "Maps a jar");
 
         // Options
 
@@ -62,7 +62,9 @@ public final class SurveyMain {
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
 
         // - Map
-        // TODO:
+        final OptionSpec<Path> configInSpec = parser.acceptsAll(asList("config", "c"), "The mapper configuration")
+                .withRequiredArg()
+                .withValuesConvertedBy(PathValueConverter.INSTANCE);
 
         final OptionSet options;
         try {
@@ -114,6 +116,25 @@ public final class SurveyMain {
             new SurveyMapper()
                     .loadMappings(mappingsPath, mappingFormat)
                     .remap(jarInPath, jarOutPath);
+        }
+        else if (options.has(mapSpec)) {
+            final Path jarInPath = options.valueOf(jarInSpec);
+            final MappingFormat mappingFormat = options.valueOf(mappingFormatSpec);
+
+            if (Files.notExists(jarInPath)) {
+                throw new RuntimeException("Input jar does not exist!");
+            }
+
+            final Path configPath = options.valueOf(configInSpec);
+            final Path mappingsOutPath = options.valueOf(outputSpec);
+
+            if (Files.notExists(configPath)) {
+                throw new RuntimeException("Mapper configuration does not exist!");
+            }
+
+            new SurveyMapper()
+                    .map(jarInPath, configPath)
+                    .saveMappings(mappingsOutPath, mappingFormat);
         }
         else {
             try {

@@ -79,6 +79,15 @@ public class SurveyMapper {
         return this;
     }
 
+    public SurveyMapper saveMappings(final Path mappingsPath, final MappingFormat format) {
+        try {
+            format.write(this.mappings, mappingsPath);
+        }
+        catch (final IOException ignored) {
+        }
+        return this;
+    }
+
     /**
      * Remaps the given input jar, with the loaded mappings, and saves it to
      * the given output path.
@@ -102,17 +111,8 @@ public class SurveyMapper {
         }
     }
 
-    public void map(final Path input, final Path configPath) {
-        final GsonBuilder gsonBuilder = new GsonBuilder();
-        this.mappers.values().forEach(mapper -> {
-            gsonBuilder.registerTypeAdapter(mapper.configType, mapper.configDeserialiser);
-        });
-        gsonBuilder.registerTypeAdapter(GlobalMapperConfig.class, new GlobalMapperConfig.Deserialiser(this.mappers));
-        final Gson gson = gsonBuilder.create();
-
-        try (final BufferedReader reader = Files.newBufferedReader(configPath);
-             final JarFile jar = new JarFile(input.toFile())) {
-            final GlobalMapperConfig config = gson.fromJson(reader, GlobalMapperConfig.class);
+    public SurveyMapper map(final Path jarPath, final GlobalMapperConfig config) {
+        try (final JarFile jar = new JarFile(jarPath.toFile())) {
             final List<AbstractMapper<?>> mappers = config.createMappers(mappings);
 
             Jars.walk(jar)
@@ -127,6 +127,25 @@ public class SurveyMapper {
         catch (final IOException ex) {
             ex.printStackTrace();
         }
+        return this;
+    }
+
+    public SurveyMapper map(final Path input, final Path configPath) {
+        final GsonBuilder gsonBuilder = new GsonBuilder();
+        this.mappers.values().forEach(mapper -> {
+            gsonBuilder.registerTypeAdapter(mapper.configType, mapper.configDeserialiser);
+        });
+        gsonBuilder.registerTypeAdapter(GlobalMapperConfig.class, new GlobalMapperConfig.Deserialiser(this.mappers));
+        final Gson gson = gsonBuilder.create();
+
+        try (final BufferedReader reader = Files.newBufferedReader(configPath)) {
+            final GlobalMapperConfig config = gson.fromJson(reader, GlobalMapperConfig.class);
+            this.map(input, config);
+        }
+        catch (final IOException ex) {
+            ex.printStackTrace();
+        }
+        return this;
     }
 
     public static class MapperRegistration<C, M extends AbstractMapper<C>> {
