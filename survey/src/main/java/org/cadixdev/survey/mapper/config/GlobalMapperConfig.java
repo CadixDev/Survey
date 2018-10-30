@@ -11,7 +11,9 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.survey.SurveyMapper;
+import org.cadixdev.survey.mapper.AbstractMapper;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -29,6 +31,25 @@ public class GlobalMapperConfig {
 
     public final List<String> blacklist = new ArrayList<>();
     public final Map<SurveyMapper.MapperRegistration<?, ?>, List<?>> mapperConfigs = new HashMap<>();
+
+    public List<AbstractMapper<?>> createMappers(final MappingSet mappings) {
+        final List<AbstractMapper<?>> mappers = new ArrayList<>();
+        this.mapperConfigs.forEach((regis, configs) -> configs.stream()
+                .map(config -> regis.createMapper(mappings, configs))
+                .forEach(mappers::add));
+        return mappers;
+    }
+
+    public boolean isBlacklisted(final String name) {
+        for (final String blacklisted : this.blacklist) {
+            if (name.startsWith(blacklisted)) return true;
+        }
+        return false;
+    }
+
+    public List<?> getConfigs(final SurveyMapper.MapperRegistration<?, ?> registration) {
+        return this.mapperConfigs.computeIfAbsent(registration, regis -> new ArrayList<>());
+    }
 
     public static class Deserialiser implements JsonDeserializer<GlobalMapperConfig> {
 
@@ -74,11 +95,10 @@ public class GlobalMapperConfig {
                     if (!mapper.has(MAPPER_TYPE)) throw new JsonParseException("mapper missing type!");
                     final String mapperType = mapper.get(MAPPER_TYPE).getAsString();
                     if (!this.mappers.containsKey(mapperType)) throw new JsonParseException("invalid mapper type!");
-                    final SurveyMapper.MapperRegistration<?, ?> mapperRegistration = this.mappers.get(mapperType);
+                    final SurveyMapper.MapperRegistration<?, ?> registration = this.mappers.get(mapperType);
 
                     if (!mapper.has(MAPPER_CONFIG)) throw new JsonParseException("mapper missing config!");
-                    config.mapperConfigs.computeIfAbsent(mapperRegistration, regis -> new ArrayList<>())
-                            .add(ctx.deserialize(mapper.get(MAPPER_CONFIG), mapperRegistration.getConfigType()));
+                    config.getConfigs(registration).add(ctx.deserialize(mapper.get(MAPPER_CONFIG), registration.getConfigType()));
                 }
             }
 

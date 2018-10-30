@@ -29,7 +29,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,14 +113,12 @@ public class SurveyMapper {
         try (final BufferedReader reader = Files.newBufferedReader(configPath);
              final JarFile jar = new JarFile(input.toFile())) {
             final GlobalMapperConfig config = gson.fromJson(reader, GlobalMapperConfig.class);
-
-            final List<AbstractMapper> mappers = new ArrayList<>();
-            config.mapperConfigs.forEach((regis, configs) -> configs.forEach(c -> mappers.add(regis.createMapper(this.mappings, c))));
+            final List<AbstractMapper<?>> mappers = config.createMappers(mappings);
 
             Jars.walk(jar)
                     .filter(entry -> entry instanceof JarClassEntry)
                     .map(entry -> (JarClassEntry) entry)
-                    .filter(entry -> config.blacklist.stream().noneMatch(b -> entry.getName().startsWith(b)))
+                    .filter(entry -> !config.isBlacklisted(entry.getName()))
                     .forEach(entry -> {
                         final ClassReader klass = new ClassReader(entry.getContents());
                         mappers.forEach(mapper -> klass.accept(mapper, 0));
