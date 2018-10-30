@@ -6,24 +6,39 @@
 
 package org.cadixdev.survey;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
 import org.cadixdev.bombe.analysis.CachingInheritanceProvider;
 import org.cadixdev.bombe.analysis.InheritanceProvider;
 import org.cadixdev.bombe.asm.analysis.ClassProviderInheritanceProvider;
 import org.cadixdev.bombe.asm.jar.JarEntryRemappingTransformer;
 import org.cadixdev.bombe.asm.jar.JarFileClassProvider;
+import org.cadixdev.bombe.jar.JarClassEntry;
 import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.io.MappingFormat;
+import org.cadixdev.survey.mapper.AbstractMapper;
+import org.cadixdev.survey.mapper.EnumNameMapper;
+import org.cadixdev.survey.mapper.config.EnumNameMapperConfig;
+import org.cadixdev.survey.mapper.config.GlobalMapperConfig;
 import org.cadixdev.survey.remapper.SurveyRemapper;
+import org.objectweb.asm.ClassReader;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
 /**
- * A fluent interface for using Survey's {@link SurveyRemapper}.
+ * A fluent interface for mapping and re-mapping with Survey.
  *
  * @author Jamie Mansfield
  * @since 0.2.0
@@ -31,6 +46,15 @@ import java.util.jar.JarOutputStream;
 public class SurveyMapper {
 
     private final MappingSet mappings;
+    private final Map<String, MapperRegistration<?, ?>> mappers = new HashMap<String, MapperRegistration<?, ?>>() {
+        {
+            this.put("enum", new MapperRegistration<>(
+                    EnumNameMapper::new,
+                    EnumNameMapperConfig.class,
+                    new EnumNameMapperConfig.Deserialiser()
+            ));
+        }
+    };
 
     public SurveyMapper(final MappingSet mappings) {
         this.mappings = mappings;
@@ -77,6 +101,59 @@ public class SurveyMapper {
         catch (final IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public void map(final Path input, final Path configPath) {
+        final GsonBuilder gsonBuilder = new GsonBuilder();
+        this.mappers.values().forEach(mapper -> {
+            gsonBuilder.registerTypeAdapter(mapper.configType, mapper.configDeserialiser);
+        });
+        gsonBuilder.registerTypeAdapter(GlobalMapperConfig.class, new GlobalMapperConfig.Deserialiser(this.mappers));
+        final Gson gson = gsonBuilder.create();
+
+        try (final BufferedReader reader = Files.newBufferedReader(configPath);
+             final JarFile jar = new JarFile(input.toFile())) {
+            final GlobalMapperConfig config = gson.fromJson(reader, GlobalMapperConfig.class);
+
+            final List<AbstractMapper> mappers = new ArrayList<>();
+            config.mapperConfigs.forEach((regis, configs) -> configs.forEach(c -> mappers.add(regis.createMapper(this.mappings, c))));
+
+            Jars.walk(jar)
+                    .filter(entry -> entry instanceof JarClassEntry)
+                    .map(entry -> (JarClassEntry) entry)
+                    .filter(entry -> config.blacklist.stream().noneMatch(b -> entry.getName().startsWith(b)))
+                    .forEach(entry -> {
+                        final ClassReader klass = new ClassReader(entry.getContents());
+                        mappers.forEach(mapper -> klass.accept(mapper, 0));
+                    });
+        }
+        catch (final IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static class MapperRegistration<C, M extends AbstractMapper<C>> {
+
+        private final BiFunction<MappingSet, C, M> constructor;
+        private final Class<C> configType;
+        private final JsonDeserializer<C> configDeserialiser;
+
+        MapperRegistration(final BiFunction<MappingSet, C, M> constructor,
+                           final Class<C> configType,
+                           final JsonDeserializer<C> configDeserialiser) {
+            this.configType = configType;
+            this.constructor = constructor;
+            this.configDeserialiser = configDeserialiser;
+        }
+
+        public Class<C> getConfigType() {
+            return this.configType;
+        }
+
+        public M createMapper(final MappingSet mappings, final Object config) {
+            return this.constructor.apply(mappings, this.configType.cast(config));
+        }
+
     }
 
 }

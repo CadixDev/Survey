@@ -13,24 +13,29 @@ import org.cadixdev.bombe.type.ObjectType;
 import org.cadixdev.bombe.type.Type;
 import org.cadixdev.bombe.type.signature.MethodSignature;
 import org.cadixdev.lorenz.MappingSet;
-import org.objectweb.asm.ClassVisitor;
+import org.cadixdev.survey.mapper.config.EnumNameMapperConfig;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import java.util.Objects;
 
-public class EnumNameMapper extends ClassVisitor {
+/**
+ * An {@link AbstractMapper} that can produce de-obfuscation mappings for enum
+ * constants, based on fragments left behind for {@code "#valueOf(String)"}.
+ *
+ * @author Jamie Mansfield
+ * @since 0.2.0
+ */
+public class EnumNameMapper extends AbstractMapper<EnumNameMapperConfig> {
 
     private static final MethodSignature STATIC_INIT = MethodSignature.of("<clinit>", "()V");
 
-    private final MappingSet mappings;
     private boolean isEnum = false;
     private ObjectType klassType = null;
 
-    public EnumNameMapper(final MappingSet mappings) {
-        super(ASM6);
-        this.mappings = mappings;
+    public EnumNameMapper(final MappingSet mappings, final EnumNameMapperConfig config) {
+        super(mappings, config);
     }
 
     @Override
@@ -51,12 +56,14 @@ public class EnumNameMapper extends ClassVisitor {
 
     @Override
     public FieldVisitor visitField(final int access, final String name, final String descriptor, final String signature, final Object value) {
-        final boolean isSynthetic = (access & Opcodes.ACC_SYNTHETIC) != 0;
-        final Type valuesType = new ArrayType(1, this.klassType);
-        if (this.isEnum && isSynthetic && valuesType.equals(Type.of(descriptor))) {
-            this.mappings.getOrCreateClassMapping(this.klassType.getClassName())
-                    .getOrCreateFieldMapping(name, descriptor)
-                    .setDeobfuscatedName("$VALUES");
+        if (this.configuration.mapSyntheticValues) {
+            final boolean isSynthetic = (access & Opcodes.ACC_SYNTHETIC) != 0;
+            final Type valuesType = new ArrayType(1, this.klassType);
+            if (this.isEnum && isSynthetic && valuesType.equals(Type.of(descriptor))) {
+                this.mappings.getOrCreateClassMapping(this.klassType.getClassName())
+                        .getOrCreateFieldMapping(name, descriptor)
+                        .setDeobfuscatedName("$VALUES");
+            }
         }
 
         return super.visitField(access, name, descriptor, signature, value);
