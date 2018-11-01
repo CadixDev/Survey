@@ -12,14 +12,15 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import org.cadixdev.lorenz.MappingSet;
-import org.cadixdev.survey.SurveyMapper;
 import org.cadixdev.survey.mapper.AbstractMapper;
+import org.cadixdev.survey.mapper.MapperRegistry;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * The global mapper configuration.
@@ -30,13 +31,20 @@ import java.util.Map;
 public class GlobalMapperConfig {
 
     public final List<String> blacklist = new ArrayList<>();
-    public final Map<SurveyMapper.MapperRegistration<?, ?>, List<?>> mapperConfigs = new HashMap<>();
+    public final Map<String, List<?>> mapperConfigs = new HashMap<>();
 
-    public List<AbstractMapper<?>> createMappers(final MappingSet mappings) {
+    public List<AbstractMapper<?>> createMappers(final MapperRegistry registry, final MappingSet mappings) {
         final List<AbstractMapper<?>> mappers = new ArrayList<>();
-        this.mapperConfigs.forEach((regis, configs) -> configs.stream()
-                .map(config -> regis.createMapper(mappings, config))
-                .forEach(mappers::add));
+        this.mapperConfigs.forEach((id, configs) -> {
+            final Optional<MapperRegistry.Registration<?, ?>> registration = registry.get(id);
+            if (!registration.isPresent()) {
+                throw new UnsupportedOperationException("Unknown mapper id provided (id: '" + id + "')!");
+            }
+
+            for (final Object config : configs) {
+                mappers.add(registration.get().create(mappings, config));
+            }
+        });
         return mappers;
     }
 
@@ -47,8 +55,8 @@ public class GlobalMapperConfig {
         return false;
     }
 
-    public List<?> getConfigs(final SurveyMapper.MapperRegistration<?, ?> registration) {
-        return this.mapperConfigs.computeIfAbsent(registration, regis -> new ArrayList<>());
+    public List<?> getConfigs(final String id) {
+        return this.mapperConfigs.computeIfAbsent(id, regis -> new ArrayList<>());
     }
 
     public static class Deserialiser implements JsonDeserializer<GlobalMapperConfig> {
@@ -58,10 +66,10 @@ public class GlobalMapperConfig {
         private static final String MAPPER_TYPE = "type";
         private static final String MAPPER_CONFIG = "config";
 
-        private final Map<String, SurveyMapper.MapperRegistration<?, ?>> mappers;
+        private final MapperRegistry registry;
 
-        public Deserialiser(final Map<String, SurveyMapper.MapperRegistration<?, ?>> mappers) {
-            this.mappers = mappers;
+        public Deserialiser(final MapperRegistry registry) {
+            this.registry = registry;
         }
 
         @Override
@@ -94,11 +102,12 @@ public class GlobalMapperConfig {
 
                     if (!mapper.has(MAPPER_TYPE)) throw new JsonParseException("mapper missing type!");
                     final String mapperType = mapper.get(MAPPER_TYPE).getAsString();
-                    if (!this.mappers.containsKey(mapperType)) throw new JsonParseException("invalid mapper type!");
-                    final SurveyMapper.MapperRegistration<?, ?> registration = this.mappers.get(mapperType);
+
+                    final Optional<MapperRegistry.Registration<?, ?>> registration = this.registry.get(mapperType);
+                    if (!registration.isPresent()) throw new JsonParseException("invalid mapper type!");
 
                     if (!mapper.has(MAPPER_CONFIG)) throw new JsonParseException("mapper missing config!");
-                    config.getConfigs(registration).add(ctx.deserialize(mapper.get(MAPPER_CONFIG), registration.getConfigType()));
+                    config.getConfigs(mapperType).add(ctx.deserialize(mapper.get(MAPPER_CONFIG), registration.get().getConfigType()));
                 }
             }
 

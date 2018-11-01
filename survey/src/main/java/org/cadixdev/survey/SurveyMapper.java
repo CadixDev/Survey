@@ -7,8 +7,6 @@
 package org.cadixdev.survey;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
 import org.cadixdev.bombe.analysis.CachingInheritanceProvider;
 import org.cadixdev.bombe.analysis.InheritanceProvider;
 import org.cadixdev.bombe.asm.analysis.ClassProviderInheritanceProvider;
@@ -19,8 +17,7 @@ import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.io.MappingFormat;
 import org.cadixdev.survey.mapper.AbstractMapper;
-import org.cadixdev.survey.mapper.EnumNameMapper;
-import org.cadixdev.survey.mapper.config.EnumNameMapperConfig;
+import org.cadixdev.survey.mapper.MapperRegistry;
 import org.cadixdev.survey.mapper.config.GlobalMapperConfig;
 import org.cadixdev.survey.remapper.SurveyRemapper;
 import org.objectweb.asm.ClassReader;
@@ -29,10 +26,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
@@ -45,15 +39,7 @@ import java.util.jar.JarOutputStream;
 public class SurveyMapper {
 
     private final MappingSet mappings;
-    private final Map<String, MapperRegistration<?, ?>> mappers = new HashMap<String, MapperRegistration<?, ?>>() {
-        {
-            this.put("enum", new MapperRegistration<>(
-                    EnumNameMapper::new,
-                    EnumNameMapperConfig.class,
-                    new EnumNameMapperConfig.Deserialiser()
-            ));
-        }
-    };
+    private final MapperRegistry mapperRegistry = MapperRegistry.createDefault();
 
     public SurveyMapper(final MappingSet mappings) {
         this.mappings = mappings;
@@ -113,7 +99,7 @@ public class SurveyMapper {
 
     public SurveyMapper map(final Path jarPath, final GlobalMapperConfig config) {
         try (final JarFile jar = new JarFile(jarPath.toFile())) {
-            final List<AbstractMapper<?>> mappers = config.createMappers(mappings);
+            final List<AbstractMapper<?>> mappers = config.createMappers(this.mapperRegistry, mappings);
 
             Jars.walk(jar)
                     .filter(entry -> entry instanceof JarClassEntry)
@@ -131,12 +117,7 @@ public class SurveyMapper {
     }
 
     public SurveyMapper map(final Path input, final Path configPath) {
-        final GsonBuilder gsonBuilder = new GsonBuilder();
-        this.mappers.values().forEach(mapper -> {
-            gsonBuilder.registerTypeAdapter(mapper.configType, mapper.configDeserialiser);
-        });
-        gsonBuilder.registerTypeAdapter(GlobalMapperConfig.class, new GlobalMapperConfig.Deserialiser(this.mappers));
-        final Gson gson = gsonBuilder.create();
+        final Gson gson = this.mapperRegistry.createGson();
 
         try (final BufferedReader reader = Files.newBufferedReader(configPath)) {
             final GlobalMapperConfig config = gson.fromJson(reader, GlobalMapperConfig.class);
@@ -146,30 +127,6 @@ public class SurveyMapper {
             ex.printStackTrace();
         }
         return this;
-    }
-
-    public static class MapperRegistration<C, M extends AbstractMapper<C>> {
-
-        private final BiFunction<MappingSet, C, M> constructor;
-        private final Class<C> configType;
-        private final JsonDeserializer<C> configDeserialiser;
-
-        MapperRegistration(final BiFunction<MappingSet, C, M> constructor,
-                           final Class<C> configType,
-                           final JsonDeserializer<C> configDeserialiser) {
-            this.configType = configType;
-            this.constructor = constructor;
-            this.configDeserialiser = configDeserialiser;
-        }
-
-        public Class<C> getConfigType() {
-            return this.configType;
-        }
-
-        public M createMapper(final MappingSet mappings, final Object config) {
-            return this.constructor.apply(mappings, this.configType.cast(config));
-        }
-
     }
 
 }

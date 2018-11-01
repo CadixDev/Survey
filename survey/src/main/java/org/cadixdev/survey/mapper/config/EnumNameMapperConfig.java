@@ -30,6 +30,8 @@ public class EnumNameMapperConfig {
 
     public static class Deserialiser implements JsonDeserializer<EnumNameMapperConfig> {
 
+        public static final Deserialiser INSTANCE = new Deserialiser();
+
         private static final String MAP_SYNTHETIC_VALUES = "map_synthetic_values";
 
         @Override
