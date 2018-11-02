@@ -9,7 +9,6 @@ package org.cadixdev.survey.mapper;
 import static org.objectweb.asm.Opcodes.ASM6;
 
 import org.objectweb.asm.ClassVisitor;
-import org.cadixdev.lorenz.MappingSet;
 
 /**
  * An object that can generate some de-obfuscation classes.
@@ -21,22 +20,22 @@ import org.cadixdev.lorenz.MappingSet;
  */
 public abstract class AbstractMapper<C> extends ClassVisitor {
 
-    protected final MappingSet mappings;
+    protected final MapperContext ctx;
     protected final C configuration;
 
-    public AbstractMapper(final MappingSet mappings, final C configuration) {
+    public AbstractMapper(final MapperContext ctx, final C configuration) {
         super(ASM6);
-        this.mappings = mappings;
+        this.ctx = ctx;
         this.configuration = configuration;
     }
 
     /**
-     * Gets the mappings that the mapper is working on.
+     * Gets the context the mapper is running within.
      *
-     * @return The mappings
+     * @return The context
      */
-    public final MappingSet getMappings() {
-        return this.mappings;
+    public final MapperContext ctx() {
+        return this.ctx;
     }
 
     /**

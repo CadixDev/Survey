@@ -12,21 +12,17 @@ import org.cadixdev.bombe.analysis.InheritanceProvider;
 import org.cadixdev.bombe.asm.analysis.ClassProviderInheritanceProvider;
 import org.cadixdev.bombe.asm.jar.JarEntryRemappingTransformer;
 import org.cadixdev.bombe.asm.jar.JarFileClassProvider;
-import org.cadixdev.bombe.jar.JarClassEntry;
 import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.io.MappingFormat;
-import org.cadixdev.survey.mapper.AbstractMapper;
+import org.cadixdev.survey.mapper.MapperEnvironment;
 import org.cadixdev.survey.mapper.MapperRegistry;
-import org.cadixdev.survey.mapper.config.GlobalMapperConfig;
 import org.cadixdev.survey.remapper.SurveyRemapper;
-import org.objectweb.asm.ClassReader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
@@ -97,18 +93,9 @@ public class SurveyMapper {
         }
     }
 
-    public SurveyMapper map(final Path jarPath, final GlobalMapperConfig config) {
+    public SurveyMapper map(final Path jarPath, final MapperEnvironment env) {
         try (final JarFile jar = new JarFile(jarPath.toFile())) {
-            final List<AbstractMapper<?>> mappers = config.createMappers(this.mapperRegistry, mappings);
-
-            Jars.walk(jar)
-                    .filter(entry -> entry instanceof JarClassEntry)
-                    .map(entry -> (JarClassEntry) entry)
-                    .filter(entry -> !config.isBlacklisted(entry.getName()))
-                    .forEach(entry -> {
-                        final ClassReader klass = new ClassReader(entry.getContents());
-                        mappers.forEach(mapper -> klass.accept(mapper, 0));
-                    });
+            env.run(jar);
         }
         catch (final IOException ex) {
             ex.printStackTrace();
@@ -117,11 +104,11 @@ public class SurveyMapper {
     }
 
     public SurveyMapper map(final Path input, final Path configPath) {
-        final Gson gson = this.mapperRegistry.createGson();
+        final Gson gson = this.mapperRegistry.createGson(this.mappings);
 
         try (final BufferedReader reader = Files.newBufferedReader(configPath)) {
-            final GlobalMapperConfig config = gson.fromJson(reader, GlobalMapperConfig.class);
-            this.map(input, config);
+            final MapperEnvironment env = gson.fromJson(reader, MapperEnvironment.class);
+            this.map(input, env);
         }
         catch (final IOException ex) {
             ex.printStackTrace();

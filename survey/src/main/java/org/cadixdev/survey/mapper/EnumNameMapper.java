@@ -34,8 +34,8 @@ public class EnumNameMapper extends AbstractMapper<EnumNameMapperConfig> {
     private boolean isEnum = false;
     private ObjectType klassType = null;
 
-    public EnumNameMapper(final MappingSet mappings, final EnumNameMapperConfig config) {
-        super(mappings, config);
+    public EnumNameMapper(final MapperContext ctx, final EnumNameMapperConfig config) {
+        super(ctx, config);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class EnumNameMapper extends AbstractMapper<EnumNameMapperConfig> {
             final boolean isSynthetic = (access & Opcodes.ACC_SYNTHETIC) != 0;
             final Type valuesType = new ArrayType(1, this.klassType);
             if (this.isEnum && isSynthetic && valuesType.equals(Type.of(descriptor))) {
-                this.mappings.getOrCreateClassMapping(this.klassType.getClassName())
+                this.ctx().mappings().getOrCreateClassMapping(this.klassType.getClassName())
                         .getOrCreateFieldMapping(name, descriptor)
                         .setDeobfuscatedName("$VALUES");
             }
@@ -77,7 +77,7 @@ public class EnumNameMapper extends AbstractMapper<EnumNameMapperConfig> {
             return new EnumMappingMethodVisitor(
                     super.visitMethod(access, name, descriptor, signature, exceptions),
                     this.klassType,
-                    this.mappings
+                    this.ctx().mappings()
             );
         }
 

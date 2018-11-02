@@ -11,7 +11,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.survey.mapper.config.EnumNameMapperConfig;
-import org.cadixdev.survey.mapper.config.GlobalMapperConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class MapperRegistry {
      */
     public <C, M extends AbstractMapper<C>> MapperRegistry register(
             final String id,
-            final BiFunction<MappingSet, C, M> constructor,
+            final BiFunction<MapperContext, C, M> constructor,
             final Class<C> configType,
             final JsonDeserializer<C> configDeserialiser) {
         if (this.mappers.containsKey(id)) {
@@ -90,9 +89,9 @@ public class MapperRegistry {
      *
      * @return The gson instance
      */
-    public Gson createGson() {
+    public Gson createGson(final MappingSet mappings) {
         final GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(GlobalMapperConfig.class, new GlobalMapperConfig.Deserialiser(this));
+        builder.registerTypeAdapter(MapperEnvironment.class, new MapperEnvironment.Deserialiser(mappings, this));
         this.mappers.forEach((id, regis) -> builder.registerTypeAdapter(regis.getConfigType(), regis.getConfigDeserialiser()));
         return builder.create();
     }
@@ -105,11 +104,11 @@ public class MapperRegistry {
      */
     public static class Registration<C, M extends AbstractMapper<C>> {
 
-        private final BiFunction<MappingSet, C, M> constructor;
+        private final BiFunction<MapperContext, C, M> constructor;
         private final Class<C> configType;
         private final JsonDeserializer<C> configDeserialiser;
 
-        Registration(final BiFunction<MappingSet, C, M> constructor,
+        Registration(final BiFunction<MapperContext, C, M> constructor,
                            final Class<C> configType,
                            final JsonDeserializer<C> configDeserialiser) {
             this.configType = configType;
@@ -120,12 +119,12 @@ public class MapperRegistry {
         /**
          * Creates a {@link AbstractMapper} given a mapping set and configuration.
          *
-         * @param mappings The mappings
+         * @param ctx The mapper context
          * @param config The mapper configuration
          * @return The mapper
          */
-        public M create(final MappingSet mappings, final Object config) {
-            return this.constructor.apply(mappings, this.configType.cast(config));
+        public M create(final MapperContext ctx, final Object config) {
+            return this.constructor.apply(ctx, this.configType.cast(config));
         }
 
         /**
