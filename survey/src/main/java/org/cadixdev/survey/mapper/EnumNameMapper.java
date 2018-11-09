@@ -48,8 +48,8 @@ public class EnumNameMapper extends AbstractMapper<EnumNameMapperConfig> {
 
     @Override
     public void visitEnd() {
-        this.isEnum = false;
         this.klassType = null;
+        this.isEnum = false;
 
         super.visitEnd();
     }

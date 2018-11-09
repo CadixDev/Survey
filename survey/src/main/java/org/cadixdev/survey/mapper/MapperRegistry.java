@@ -11,6 +11,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.survey.mapper.config.EnumNameMapperConfig;
+import org.cadixdev.survey.mapper.config.FieldNameMapperConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,12 @@ public class MapperRegistry {
                         EnumNameMapper::new,
                         EnumNameMapperConfig.class,
                         EnumNameMapperConfig.Deserialiser.INSTANCE
+                )
+                .register(
+                        "field-name",
+                        FieldNameMapper::new,
+                        FieldNameMapperConfig.class,
+                        FieldNameMapperConfig.Deserialiser.INSTANCE
                 )
                 ;
     }

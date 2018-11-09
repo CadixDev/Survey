@@ -100,8 +100,8 @@ public class MapperEnvironment {
 
         public void run(final JarFile jar) {
             Jars.walk(jar)
-                    .filter(entry -> entry instanceof JarClassEntry)
-                    .map(entry -> (JarClassEntry) entry)
+                    .filter(JarClassEntry.class::isInstance)
+                    .map(JarClassEntry.class::cast)
                     .filter(entry -> !this.mapper.ctx().blacklisted(entry.getName()))
                     .forEach(entry -> {
                         final ClassReader klass = new ClassReader(entry.getContents());
