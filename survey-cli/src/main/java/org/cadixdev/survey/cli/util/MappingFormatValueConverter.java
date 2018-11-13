@@ -22,15 +22,7 @@ public final class MappingFormatValueConverter implements ValueConverter<Mapping
 
     @Override
     public MappingFormat convert(final String value) {
-        switch (value.toLowerCase()) {
-            case "srg": return MappingFormats.SRG;
-            case "csrg": return MappingFormats.CSRG;
-            case "tsrg": return MappingFormats.TSRG;
-            case "kin": return MappingFormats.KIN;
-            case "jam": return MappingFormats.JAM;
-            case "enigma": return MappingFormats.ENIGMA;
-            default: return null;
-        }
+        return MappingFormats.byId(value);
     }
 
     @Override
