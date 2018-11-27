@@ -229,3 +229,4 @@ gradle-app.setting
 ### Survey ###
 run/
 survey*/build/
+survey*/out/

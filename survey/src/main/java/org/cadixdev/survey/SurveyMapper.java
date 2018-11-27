@@ -16,7 +16,7 @@ import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.io.MappingFormat;
 import org.cadixdev.survey.mapper.MapperEnvironment;
-import org.cadixdev.survey.mapper.MapperRegistry;
+import org.cadixdev.survey.mapper.provider.MapperProviders;
 import org.cadixdev.survey.remapper.SurveyRemapper;
 
 import java.io.BufferedReader;
@@ -35,7 +35,6 @@ import java.util.jar.JarOutputStream;
 public class SurveyMapper {
 
     private final MappingSet mappings;
-    private final MapperRegistry mapperRegistry = MapperRegistry.createDefault();
 
     public SurveyMapper(final MappingSet mappings) {
         this.mappings = mappings;
@@ -104,7 +103,7 @@ public class SurveyMapper {
     }
 
     public SurveyMapper map(final Path input, final Path configPath) {
-        final Gson gson = this.mapperRegistry.createGson(this.mappings);
+        final Gson gson = MapperProviders.createGson(MapperProviders.REGISTRY, this.mappings);
 
         try (final BufferedReader reader = Files.newBufferedReader(configPath)) {
             final MapperEnvironment env = gson.fromJson(reader, MapperEnvironment.class);

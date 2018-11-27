@@ -14,12 +14,13 @@ import com.google.gson.JsonParseException;
 import org.cadixdev.bombe.jar.JarClassEntry;
 import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
+import org.cadixdev.lorenz.util.Registry;
+import org.cadixdev.survey.mapper.provider.MapperProvider;
 import org.objectweb.asm.ClassReader;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.jar.JarFile;
 
 /**
@@ -31,10 +32,10 @@ import java.util.jar.JarFile;
 public class MapperEnvironment {
 
     private final MappingSet mappings;
-    private final MapperRegistry registry;
+    private final Registry<MapperProvider<?, ?>> registry;
     private final List<Instance<?, ?>> mappers = new ArrayList<>();
 
-    public MapperEnvironment(final MappingSet mappings, final MapperRegistry registry) {
+    public MapperEnvironment(final MappingSet mappings, final Registry<MapperProvider<?, ?>> registry) {
         this.mappings = mappings;
         this.registry = registry;
     }
@@ -53,7 +54,7 @@ public class MapperEnvironment {
      *
      * @return The mapper registry
      */
-    public MapperRegistry getRegistry() {
+    public Registry<MapperProvider<?, ?>> getRegistry() {
         return this.registry;
     }
 
@@ -139,9 +140,9 @@ public class MapperEnvironment {
         }
 
         private final MappingSet mappings;
-        private final MapperRegistry registry;
+        private final Registry<MapperProvider<?, ?>> registry;
 
-        public Deserialiser(final MappingSet mappings, final MapperRegistry registry) {
+        public Deserialiser(final MappingSet mappings, final Registry<MapperProvider<?, ?>> registry) {
             this.mappings = mappings;
             this.registry = registry;
         }
@@ -192,14 +193,13 @@ public class MapperEnvironment {
                     final String mapperId = mapper.get(MAPPER_ID).getAsString();
                     final String mapperType = mapper.get(MAPPER_TYPE).getAsString();
 
-                    final Optional<MapperRegistry.Registration<?, ?>> registration = env.getRegistry().get(mapperType);
-                    if (!registration.isPresent()) throw new JsonParseException("Unknown mapper type specified!");
+                    final MapperProvider<?, ?> provider = env.getRegistry().byId(mapperType);
+                    if (provider == null) throw new JsonParseException("Unknown mapper type specified!");
 
                     if (!mapper.has(MAPPER_CONFIG)) throw new JsonParseException("Mapper configuration not present!");
-                    final Object config = ctx.deserialize(mapper.get(MAPPER_CONFIG), registration.get().getConfigType());
 
                     // register the mapper instance :)
-                    env.mappers.add(new Instance<>(mapperId, registration.get().create(mapperCtx, config)));
+                    env.mappers.add(new Instance<>(mapperId, provider.deserialise(mapperCtx, ctx, mapper.get(MAPPER_CONFIG))));
                 }
             }
 
