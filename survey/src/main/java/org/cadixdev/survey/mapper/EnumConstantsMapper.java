@@ -13,7 +13,7 @@ import org.cadixdev.bombe.type.ObjectType;
 import org.cadixdev.bombe.type.Type;
 import org.cadixdev.bombe.type.signature.MethodSignature;
 import org.cadixdev.lorenz.MappingSet;
-import org.cadixdev.survey.mapper.config.EnumNameMapperConfig;
+import org.cadixdev.survey.mapper.config.EnumConstantsMapperConfig;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -27,14 +27,14 @@ import java.util.Objects;
  * @author Jamie Mansfield
  * @since 0.2.0
  */
-public class EnumNameMapper extends AbstractMapper<EnumNameMapperConfig> {
+public class EnumConstantsMapper extends AbstractMapper<EnumConstantsMapperConfig> {
 
     private static final MethodSignature STATIC_INIT = MethodSignature.of("<clinit>", "()V");
 
     private boolean isEnum = false;
     private ObjectType klassType = null;
 
-    public EnumNameMapper(final MapperContext ctx, final EnumNameMapperConfig config) {
+    public EnumConstantsMapper(final MapperContext ctx, final EnumConstantsMapperConfig config) {
         super(ctx, config);
     }
 

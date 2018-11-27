@@ -4,5 +4,5 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-org.cadixdev.survey.mapper.provider.EnumNameMapperProvider
+org.cadixdev.survey.mapper.provider.EnumConstantsMapperProvider
 org.cadixdev.survey.mapper.provider.FieldNameMapperProvider
