@@ -24,10 +24,8 @@ import java.util.Map;
  */
 public class FieldNameMapperConfig {
 
-    public Map<ModifierRequirement, Boolean> requirements = new HashMap<>();
-
+    public final Map<ModifierRequirement, Boolean> requirements = new HashMap<>();
     public String desc;
-
     public String name;
 
     public static class Deserialiser implements JsonDeserializer<FieldNameMapperConfig> {

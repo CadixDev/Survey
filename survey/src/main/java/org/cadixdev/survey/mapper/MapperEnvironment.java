@@ -20,6 +20,7 @@ import org.objectweb.asm.ClassReader;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.jar.JarFile;
 
@@ -104,6 +105,7 @@ public class MapperEnvironment {
                     .filter(JarClassEntry.class::isInstance)
                     .map(JarClassEntry.class::cast)
                     .filter(entry -> !this.mapper.ctx().blacklisted(entry.getName()))
+                    .sorted(Comparator.comparing(JarClassEntry::getName))
                     .forEach(entry -> {
                         final ClassReader klass = new ClassReader(entry.getContents());
                         klass.accept(this.mapper, 0);
