@@ -84,7 +84,7 @@ public class FieldIntemediaryMapper extends AbstractIntermediaryMapper<FieldInte
                     final JsonElement element,
                     final Type type,
                     final JsonDeserializationContext ctx) throws JsonParseException {
-                if (!element.isJsonObject()) throw new JsonParseException("enum-constants config must be an object!");
+                if (!element.isJsonObject()) throw new JsonParseException("field intermediary config must be an object!");
                 final JsonObject object = element.getAsJsonObject();
 
                 final String format = object.has(FORMAT) ?

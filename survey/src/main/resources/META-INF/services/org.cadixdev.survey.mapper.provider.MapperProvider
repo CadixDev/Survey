@@ -6,4 +6,5 @@
 
 org.cadixdev.survey.mapper.provider.EnumConstantsMapperProvider
 org.cadixdev.survey.mapper.provider.FieldNameMapperProvider
+org.cadixdev.survey.mapper.intermediary.provider.ClassIntermediaryMapperProvider
 org.cadixdev.survey.mapper.intermediary.provider.FieldIntermediaryMapperProvider
