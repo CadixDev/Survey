@@ -33,12 +33,10 @@ import java.util.jar.JarFile;
 public class MapperEnvironment {
 
     private final MappingSet mappings;
-    private final Registry<MapperProvider<?, ?>> registry;
     private final List<Instance<?, ?>> mappers = new ArrayList<>();
 
-    public MapperEnvironment(final MappingSet mappings, final Registry<MapperProvider<?, ?>> registry) {
+    public MapperEnvironment(final MappingSet mappings) {
         this.mappings = mappings;
-        this.registry = registry;
     }
 
     /**
@@ -48,15 +46,6 @@ public class MapperEnvironment {
      */
     public MappingSet getMappings() {
         return this.mappings;
-    }
-
-    /**
-     * Gets the registry of mappers.
-     *
-     * @return The mapper registry
-     */
-    public Registry<MapperProvider<?, ?>> getRegistry() {
-        return this.registry;
     }
 
     public void run(final JarFile jar) {
@@ -119,27 +108,13 @@ public class MapperEnvironment {
      */
     public static class Deserialiser implements JsonDeserializer<MapperEnvironment> {
 
-        private static final String BLACKLIST = "blacklist";
+        private static final String CONTEXTS = "contexts";
+        private static final String DEFAULT_CONTEXT = "default-context";
         private static final String MAPPERS = "mappers";
         private static final String MAPPER_ID = "id";
         private static final String MAPPER_TYPE = "type";
+        private static final String MAPPER_CONTEXT = "context";
         private static final String MAPPER_CONFIG = "config";
-
-        private static List<String> readBlacklist(final JsonObject parent) throws JsonParseException {
-            final List<String> blacklist = new ArrayList<>();
-
-            if (parent.has(BLACKLIST)) {
-                final JsonElement blacklistElement = parent.get(BLACKLIST);
-                if (!blacklistElement.isJsonArray()) throw new JsonParseException("Blacklist must be an array!");
-
-                for (final JsonElement arrElement : blacklistElement.getAsJsonArray()) {
-                    if (!arrElement.isJsonPrimitive()) throw new JsonParseException("Invalid blacklist entry!");
-                    blacklist.add(arrElement.getAsString());
-                }
-            }
-
-            return blacklist;
-        }
 
         private final MappingSet mappings;
         private final Registry<MapperProvider<?, ?>> registry;
@@ -157,8 +132,25 @@ public class MapperEnvironment {
             if (!element.isJsonObject()) throw new JsonParseException("Invalid environment configuration!");
             final JsonObject object = element.getAsJsonObject();
 
-            final MapperEnvironment env = new MapperEnvironment(this.mappings, this.registry);
-            final List<String> blacklist = readBlacklist(object);
+            final MapperContext.Deserialiser contextDeserialiser = new MapperContext.Deserialiser(this.mappings);
+
+            if (object.has(CONTEXTS)) {
+                final JsonElement contextsElement = object.get(CONTEXTS);
+                if (!contextsElement.isJsonArray()) throw new JsonParseException("Contexts must be an array!");
+
+                for (final JsonElement arrElement : contextsElement.getAsJsonArray()) {
+                    contextDeserialiser.deserialize(arrElement, MapperContext.class, ctx);
+                }
+            }
+            final MapperContext defaultCtx;
+            if (object.has(DEFAULT_CONTEXT)) {
+                defaultCtx = contextDeserialiser.deserialize(object.get(DEFAULT_CONTEXT), MapperContext.class, ctx);
+            }
+            else {
+                defaultCtx = new MapperContext(this.mappings, null) {};
+            }
+
+            final MapperEnvironment env = new MapperEnvironment(this.mappings);
 
             if (object.has(MAPPERS)) {
                 final JsonElement mappersElement = object.get(MAPPERS);
@@ -168,34 +160,20 @@ public class MapperEnvironment {
                     if (!arrElement.isJsonObject()) throw new JsonParseException("Invalid mapper entry!");
                     final JsonObject mapper = arrElement.getAsJsonObject();
 
-                    // Read the blacklist, create the individual context
-                    final List<String> mapperBlacklist = readBlacklist(mapper);
-                    final MapperContext mapperCtx = new MapperContext() {
-                        @Override
-                        public MappingSet mappings() {
-                            return env.getMappings();
-                        }
-
-                        @Override
-                        public boolean blacklisted(final String klass) {
-                            // First check the global blacklist
-                            for (final String blacklisted : blacklist) {
-                                if (klass.startsWith(blacklisted)) return true;
-                            }
-                            // Now check the individual blacklist
-                            for (final String blacklisted : mapperBlacklist) {
-                                if (klass.startsWith(blacklisted)) return true;
-                            }
-                            return false;
-                        }
-                    };
+                    final MapperContext mapperCtx;
+                    if (mapper.has(MAPPER_CONTEXT)) {
+                        mapperCtx = contextDeserialiser.deserialize(mapper.get(MAPPER_CONTEXT), MapperContext.class, ctx);
+                    }
+                    else {
+                        mapperCtx = defaultCtx;
+                    }
 
                     if (!mapper.has(MAPPER_ID)) throw new JsonParseException("Mapper missing id!");
                     if (!mapper.has(MAPPER_TYPE)) throw new JsonParseException("Mapper missing type!");
                     final String mapperId = mapper.get(MAPPER_ID).getAsString();
                     final String mapperType = mapper.get(MAPPER_TYPE).getAsString();
 
-                    final MapperProvider<?, ?> provider = env.getRegistry().byId(mapperType);
+                    final MapperProvider<?, ?> provider = this.registry.byId(mapperType);
                     if (provider == null) throw new JsonParseException("Unknown mapper type specified!");
 
                     if (!mapper.has(MAPPER_CONFIG)) throw new JsonParseException("Mapper configuration not present!");
