@@ -1,22 +1,13 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
- *  License, v. 2.0. If a copy of the MPL was not distributed with this
- *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- *  License, v. 2.0. If a copy of the MPL was not distributed with this
- *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
 package org.cadixdev.survey.mapper.provider;
 
 import com.google.gson.JsonDeserializer;
 import org.cadixdev.survey.mapper.AbstractMapper;
-import org.cadixdev.survey.mapper.MapperContext;
-
-import java.util.function.BiFunction;
 
 /**
  * A simple implementation of {@link MapperProvider}, making implementation
