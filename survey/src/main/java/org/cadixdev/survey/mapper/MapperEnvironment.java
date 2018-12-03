@@ -109,7 +109,7 @@ public class MapperEnvironment {
     public static class Deserialiser implements JsonDeserializer<MapperEnvironment> {
 
         private static final String CONTEXTS = "contexts";
-        private static final String DEFAULT_CONTEXT = "default-context";
+        private static final String DEFAULT_CONTEXT = "default_context";
         private static final String MAPPERS = "mappers";
         private static final String MAPPER_ID = "id";
         private static final String MAPPER_TYPE = "type";

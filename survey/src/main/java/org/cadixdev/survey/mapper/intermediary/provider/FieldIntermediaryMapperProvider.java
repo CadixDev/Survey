@@ -19,7 +19,7 @@ import org.cadixdev.survey.mapper.provider.SimpleMapperProvider;
 public class FieldIntermediaryMapperProvider
         extends SimpleMapperProvider<FieldIntemediaryMapper, FieldIntemediaryMapper.Config> {
 
-    private static final String ID = "intermediary-fields";
+    private static final String ID = "intermediary_fields";
 
     public FieldIntermediaryMapperProvider() {
         super(ID, FieldIntemediaryMapper.Config.class, FieldIntemediaryMapper.Config.Deserialiser.INSTANCE);

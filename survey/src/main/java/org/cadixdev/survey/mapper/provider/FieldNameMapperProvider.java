@@ -18,7 +18,7 @@ import org.cadixdev.survey.mapper.config.FieldNameMapperConfig;
  */
 public class FieldNameMapperProvider extends SimpleMapperProvider<FieldNameMapper, FieldNameMapperConfig> {
 
-    private static final String ID = "field-name";
+    private static final String ID = "field_name";
 
     public FieldNameMapperProvider() {
         super(ID, FieldNameMapperConfig.class, FieldNameMapperConfig.Deserialiser.INSTANCE);

@@ -18,7 +18,7 @@ import org.cadixdev.survey.mapper.config.EnumConstantsMapperConfig;
  */
 public class EnumConstantsMapperProvider extends SimpleMapperProvider<EnumConstantsMapper, EnumConstantsMapperConfig> {
 
-    private static final String ID = "enum-constants";
+    private static final String ID = "enum_constants";
 
     public EnumConstantsMapperProvider() {
         super(ID, EnumConstantsMapperConfig.class, EnumConstantsMapperConfig.Deserialiser.INSTANCE);
