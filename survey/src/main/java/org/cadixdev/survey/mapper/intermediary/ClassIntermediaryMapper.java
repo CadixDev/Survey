@@ -34,7 +34,14 @@ public class ClassIntermediaryMapper extends AbstractIntermediaryMapper<ClassInt
     public void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
         final ClassMapping<?, ?> klass = this.ctx().mappings().getOrCreateClassMapping(name);
         if (!klass.hasDeobfuscatedName()) {
-            klass.setDeobfuscatedName(this.getConfiguration().getMemberName(this.count++, name));
+            if (name.contains("$")) {
+                final String innerName = name.substring(name.lastIndexOf('$') + 1);
+                klass.setDeobfuscatedName(this.getConfiguration().getMemberName(++this.count, innerName));
+            }
+            else {
+                klass.setDeobfuscatedName(this.getConfiguration().getPackageName() +
+                        this.getConfiguration().getMemberName(++this.count, name));
+            }
         }
 
         super.visit(version, access, name, signature, superName, interfaces);
@@ -46,9 +53,11 @@ public class ClassIntermediaryMapper extends AbstractIntermediaryMapper<ClassInt
     public static class Config extends AbstractIntermediaryMapper.Config {
 
         private final String format;
+        private final String packageName;
 
-        public Config(final String format) {
+        public Config(final String format, final String packageName) {
             this.format = format;
+            this.packageName = packageName;
         }
 
         @Override
@@ -56,10 +65,15 @@ public class ClassIntermediaryMapper extends AbstractIntermediaryMapper<ClassInt
             return this.format;
         }
 
+        public String getPackageName() {
+            return this.packageName;
+        }
+
         public static class Deserialiser implements JsonDeserializer<ClassIntermediaryMapper.Config> {
 
             public static final Deserialiser INSTANCE = new Deserialiser();
 
+            private static final String PACKAGE = "package";
             private static final String FORMAT = "format";
             private static final String FORMAT_DEFAULT = "Class{id}_{obf}";
 
@@ -75,7 +89,11 @@ public class ClassIntermediaryMapper extends AbstractIntermediaryMapper<ClassInt
                         object.get(FORMAT).getAsString() :
                         FORMAT_DEFAULT;
 
-                return new ClassIntermediaryMapper.Config(format);
+                final String packageName = object.has(PACKAGE) ?
+                        object.get(PACKAGE).getAsString() :
+                        "";
+
+                return new ClassIntermediaryMapper.Config(format, packageName);
             }
 
         }

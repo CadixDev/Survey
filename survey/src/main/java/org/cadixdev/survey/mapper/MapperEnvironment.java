@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.jar.JarFile;
 
 /**
@@ -31,6 +32,17 @@ import java.util.jar.JarFile;
  * @since 0.2.0
  */
 public class MapperEnvironment {
+
+    private static <T> Comparator<T> comparingLength(final Function<? super T, String> keyExtractor) {
+        return (c1, c2) -> {
+            final String key1 = keyExtractor.apply(c1);
+            final String key2 = keyExtractor.apply(c2);
+            if (key1.length() != key2.length()) {
+                return key1.length() - key2.length();
+            }
+            return key1.compareTo(key2);
+        };
+    }
 
     private final MappingSet mappings;
     private final List<Instance<?, ?>> mappers = new ArrayList<>();
@@ -94,7 +106,7 @@ public class MapperEnvironment {
                     .filter(JarClassEntry.class::isInstance)
                     .map(JarClassEntry.class::cast)
                     .filter(entry -> !this.mapper.ctx().blacklisted(entry.getName()))
-                    .sorted(Comparator.comparing(JarClassEntry::getName))
+                    .sorted(comparingLength(JarClassEntry::getName))
                     .forEach(entry -> {
                         final ClassReader klass = new ClassReader(entry.getContents());
                         klass.accept(this.mapper, 0);

@@ -44,7 +44,7 @@ public class FieldIntemediaryMapper extends AbstractIntermediaryMapper<FieldInte
     public FieldVisitor visitField(final int access, final String name, final String descriptor, final String signature, final Object value) {
         final FieldMapping fieldMapping = this.klass.getOrCreateFieldMapping(name, descriptor);
         if (!fieldMapping.hasDeobfuscatedName()) {
-            fieldMapping.setDeobfuscatedName(this.getConfiguration().getMemberName(this.count++, name));
+            fieldMapping.setDeobfuscatedName(this.getConfiguration().getMemberName(++this.count, name));
         }
         return super.visitField(access, name, descriptor, signature, value);
     }
