@@ -6,7 +6,7 @@
 
 package org.cadixdev.survey.mapper.intermediary.provider;
 
-import org.cadixdev.survey.mapper.MapperContext;
+import org.cadixdev.survey.SurveyContext;
 import org.cadixdev.survey.mapper.intermediary.FieldIntemediaryMapper;
 import org.cadixdev.survey.mapper.provider.SimpleMapperProvider;
 
@@ -26,7 +26,7 @@ public class FieldIntermediaryMapperProvider
     }
 
     @Override
-    public FieldIntemediaryMapper create(final MapperContext ctx, final FieldIntemediaryMapper.Config config) {
+    public FieldIntemediaryMapper create(final SurveyContext ctx, final FieldIntemediaryMapper.Config config) {
         return new FieldIntemediaryMapper(ctx, config);
     }
 

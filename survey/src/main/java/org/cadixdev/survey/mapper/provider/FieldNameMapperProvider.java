@@ -7,7 +7,7 @@
 package org.cadixdev.survey.mapper.provider;
 
 import org.cadixdev.survey.mapper.FieldNameMapper;
-import org.cadixdev.survey.mapper.MapperContext;
+import org.cadixdev.survey.SurveyContext;
 import org.cadixdev.survey.mapper.config.FieldNameMapperConfig;
 
 /**
@@ -25,7 +25,7 @@ public class FieldNameMapperProvider extends SimpleMapperProvider<FieldNameMappe
     }
 
     @Override
-    public FieldNameMapper create(final MapperContext ctx, final FieldNameMapperConfig config) {
+    public FieldNameMapper create(final SurveyContext ctx, final FieldNameMapperConfig config) {
         return new FieldNameMapper(ctx, config);
     }
 

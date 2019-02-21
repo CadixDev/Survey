@@ -13,7 +13,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import org.cadixdev.lorenz.model.ClassMapping;
 import org.cadixdev.lorenz.model.FieldMapping;
-import org.cadixdev.survey.mapper.MapperContext;
+import org.cadixdev.survey.SurveyContext;
 import org.objectweb.asm.FieldVisitor;
 
 import java.lang.reflect.Type;
@@ -29,7 +29,7 @@ public class FieldIntemediaryMapper extends AbstractIntermediaryMapper<FieldInte
     private int count = 0;
     private ClassMapping<?, ?> klass;
 
-    public FieldIntemediaryMapper(final MapperContext ctx, final Config configuration) {
+    public FieldIntemediaryMapper(final SurveyContext ctx, final Config configuration) {
         super(ctx, configuration);
     }
 

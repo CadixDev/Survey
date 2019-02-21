@@ -10,7 +10,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import org.cadixdev.survey.mapper.AbstractMapper;
-import org.cadixdev.survey.mapper.MapperContext;
+import org.cadixdev.survey.SurveyContext;
 
 /**
  * Used to describe a mapper in complete.
@@ -37,7 +37,7 @@ public interface MapperProvider<M extends AbstractMapper<C>, C> {
      * @param config The configuration
      * @return The mapper instance
      */
-    M create(final MapperContext ctx, final C config);
+    M create(final SurveyContext ctx, final C config);
 
     /**
      * Gets the class of the configuration type.
@@ -62,7 +62,7 @@ public interface MapperProvider<M extends AbstractMapper<C>, C> {
      * @param jsonElement The JSON element to de-serialise
      * @return The mapper instance
      */
-    default M deserialise(final MapperContext mapperCtx,
+    default M deserialise(final SurveyContext mapperCtx,
                           final JsonDeserializationContext jsonCtx, final JsonElement jsonElement) {
         // De-serialise the configuration
         final C config = this.getConfigurationDeserialiser()

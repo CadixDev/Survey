@@ -7,6 +7,7 @@
 package org.cadixdev.survey.mapper;
 
 import org.cadixdev.bombe.type.ObjectType;
+import org.cadixdev.survey.SurveyContext;
 import org.cadixdev.survey.mapper.config.FieldNameMapperConfig;
 import org.cadixdev.survey.mapper.config.ModifierRequirement;
 import org.objectweb.asm.FieldVisitor;
@@ -24,7 +25,7 @@ public class FieldNameMapper extends AbstractMapper<FieldNameMapperConfig> {
 
     private ObjectType klassType;
 
-    public FieldNameMapper(final MapperContext ctx, final FieldNameMapperConfig config) {
+    public FieldNameMapper(final SurveyContext ctx, final FieldNameMapperConfig config) {
         super(ctx, config);
     }
 

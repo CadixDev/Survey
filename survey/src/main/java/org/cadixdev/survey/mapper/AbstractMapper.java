@@ -8,6 +8,7 @@ package org.cadixdev.survey.mapper;
 
 import static org.objectweb.asm.Opcodes.ASM6;
 
+import org.cadixdev.survey.SurveyContext;
 import org.objectweb.asm.ClassVisitor;
 
 /**
@@ -20,10 +21,10 @@ import org.objectweb.asm.ClassVisitor;
  */
 public abstract class AbstractMapper<C> extends ClassVisitor {
 
-    protected final MapperContext ctx;
+    protected final SurveyContext ctx;
     protected final C configuration;
 
-    public AbstractMapper(final MapperContext ctx, final C configuration) {
+    public AbstractMapper(final SurveyContext ctx, final C configuration) {
         super(ASM6);
         this.ctx = ctx;
         this.configuration = configuration;
@@ -34,7 +35,7 @@ public abstract class AbstractMapper<C> extends ClassVisitor {
      *
      * @return The context
      */
-    public final MapperContext ctx() {
+    public final SurveyContext ctx() {
         return this.ctx;
     }
 

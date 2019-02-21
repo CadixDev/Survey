@@ -15,6 +15,7 @@ import org.cadixdev.bombe.jar.JarClassEntry;
 import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.util.Registry;
+import org.cadixdev.survey.SurveyContext;
 import org.cadixdev.survey.mapper.provider.MapperProvider;
 import org.objectweb.asm.ClassReader;
 
@@ -144,22 +145,22 @@ public class MapperEnvironment {
             if (!element.isJsonObject()) throw new JsonParseException("Invalid environment configuration!");
             final JsonObject object = element.getAsJsonObject();
 
-            final MapperContext.Deserialiser contextDeserialiser = new MapperContext.Deserialiser(this.mappings);
+            final SurveyContext.Deserialiser contextDeserialiser = new SurveyContext.Deserialiser(this.mappings);
 
             if (object.has(CONTEXTS)) {
                 final JsonElement contextsElement = object.get(CONTEXTS);
                 if (!contextsElement.isJsonArray()) throw new JsonParseException("Contexts must be an array!");
 
                 for (final JsonElement arrElement : contextsElement.getAsJsonArray()) {
-                    contextDeserialiser.deserialize(arrElement, MapperContext.class, ctx);
+                    contextDeserialiser.deserialize(arrElement, SurveyContext.class, ctx);
                 }
             }
-            final MapperContext defaultCtx;
+            final SurveyContext defaultCtx;
             if (object.has(DEFAULT_CONTEXT)) {
-                defaultCtx = contextDeserialiser.deserialize(object.get(DEFAULT_CONTEXT), MapperContext.class, ctx);
+                defaultCtx = contextDeserialiser.deserialize(object.get(DEFAULT_CONTEXT), SurveyContext.class, ctx);
             }
             else {
-                defaultCtx = new MapperContext(this.mappings, null) {};
+                defaultCtx = new SurveyContext(this.mappings, null) {};
             }
 
             final MapperEnvironment env = new MapperEnvironment(this.mappings);
@@ -172,9 +173,9 @@ public class MapperEnvironment {
                     if (!arrElement.isJsonObject()) throw new JsonParseException("Invalid mapper entry!");
                     final JsonObject mapper = arrElement.getAsJsonObject();
 
-                    final MapperContext mapperCtx;
+                    final SurveyContext mapperCtx;
                     if (mapper.has(MAPPER_CONTEXT)) {
-                        mapperCtx = contextDeserialiser.deserialize(mapper.get(MAPPER_CONTEXT), MapperContext.class, ctx);
+                        mapperCtx = contextDeserialiser.deserialize(mapper.get(MAPPER_CONTEXT), SurveyContext.class, ctx);
                     }
                     else {
                         mapperCtx = defaultCtx;

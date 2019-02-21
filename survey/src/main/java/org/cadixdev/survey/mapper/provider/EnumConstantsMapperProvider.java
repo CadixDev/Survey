@@ -7,7 +7,7 @@
 package org.cadixdev.survey.mapper.provider;
 
 import org.cadixdev.survey.mapper.EnumConstantsMapper;
-import org.cadixdev.survey.mapper.MapperContext;
+import org.cadixdev.survey.SurveyContext;
 import org.cadixdev.survey.mapper.config.EnumConstantsMapperConfig;
 
 /**
@@ -25,7 +25,7 @@ public class EnumConstantsMapperProvider extends SimpleMapperProvider<EnumConsta
     }
 
     @Override
-    public EnumConstantsMapper create(final MapperContext ctx, final EnumConstantsMapperConfig config) {
+    public EnumConstantsMapper create(final SurveyContext ctx, final EnumConstantsMapperConfig config) {
         return new EnumConstantsMapper(ctx, config);
     }
 

@@ -8,6 +8,7 @@ package org.cadixdev.survey.patcher;
 
 import static org.objectweb.asm.Opcodes.ASM6;
 
+import org.cadixdev.survey.SurveyContext;
 import org.objectweb.asm.ClassVisitor;
 
 /**
@@ -20,15 +21,26 @@ import org.objectweb.asm.ClassVisitor;
  */
 public abstract class AbstractPatcher<C> extends ClassVisitor {
 
+    protected final SurveyContext ctx;
     protected final C configuration;
 
-    public AbstractPatcher(final C configuration) {
+    public AbstractPatcher(final SurveyContext ctx, final C configuration) {
         super(ASM6);
+        this.ctx = ctx;
         this.configuration = configuration;
     }
 
     /**
-     * Gets the configuration of this mapper.
+     * Gets the context the patcher is running within.
+     *
+     * @return The context
+     */
+    public final SurveyContext ctx() {
+        return this.ctx;
+    }
+
+    /**
+     * Gets the configuration of this patcher.
      *
      * @return The configuration
      */

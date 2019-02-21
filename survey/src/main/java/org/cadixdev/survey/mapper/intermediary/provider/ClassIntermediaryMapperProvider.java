@@ -6,7 +6,7 @@
 
 package org.cadixdev.survey.mapper.intermediary.provider;
 
-import org.cadixdev.survey.mapper.MapperContext;
+import org.cadixdev.survey.SurveyContext;
 import org.cadixdev.survey.mapper.intermediary.ClassIntermediaryMapper;
 import org.cadixdev.survey.mapper.provider.SimpleMapperProvider;
 
@@ -26,7 +26,7 @@ public class ClassIntermediaryMapperProvider
     }
 
     @Override
-    public ClassIntermediaryMapper create(final MapperContext ctx, final ClassIntermediaryMapper.Config config) {
+    public ClassIntermediaryMapper create(final SurveyContext ctx, final ClassIntermediaryMapper.Config config) {
         return new ClassIntermediaryMapper(ctx, config);
     }
 

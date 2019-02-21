@@ -7,7 +7,7 @@
 package org.cadixdev.survey.mapper.intermediary;
 
 import org.cadixdev.survey.mapper.AbstractMapper;
-import org.cadixdev.survey.mapper.MapperContext;
+import org.cadixdev.survey.SurveyContext;
 
 /**
  * An intermediary mapper, that produces version-agnostic mappings.
@@ -19,7 +19,7 @@ import org.cadixdev.survey.mapper.MapperContext;
 public abstract class AbstractIntermediaryMapper<C extends AbstractIntermediaryMapper.Config>
         extends AbstractMapper<C> {
 
-    public AbstractIntermediaryMapper(final MapperContext ctx, final C configuration) {
+    public AbstractIntermediaryMapper(final SurveyContext ctx, final C configuration) {
         super(ctx, configuration);
     }
 

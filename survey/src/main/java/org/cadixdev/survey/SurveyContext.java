@@ -4,7 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.cadixdev.survey.mapper;
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+package org.cadixdev.survey;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -19,23 +25,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The context of which a mapper runs within.
+ * The context of which Survey runs within.
  *
  * @author Jamie Mansfield
  * @since 0.2.0
  */
-public abstract class MapperContext {
+public abstract class SurveyContext {
 
     private final MappingSet mappings;
-    private final MapperContext parent;
+    private final SurveyContext parent;
 
-    public MapperContext(final MappingSet mappings, final MapperContext parent) {
+    public SurveyContext(final MappingSet mappings, final SurveyContext parent) {
         this.mappings = mappings;
         this.parent = parent;
     }
 
     /**
-     * Gets the mapping set, in use by the mapper.
+     * Gets the mapping set, in use by Survey.
      *
      * @return The mappings
      */
@@ -45,7 +51,7 @@ public abstract class MapperContext {
 
     /**
      * Established whether the given class is blacklisted either
-     * globally, or specific to the mapper.
+     * globally, or specific to context.
      *
      * @param klass The class to check
      * @return {@code true} if the class is blacklisted;
@@ -56,33 +62,33 @@ public abstract class MapperContext {
     }
 
     /**
-     * The de-serialiser used for reading mapper contexts.
+     * The de-serialiser used for reading Survey contexts.
      */
-    public static class Deserialiser implements JsonDeserializer<MapperContext> {
+    public static class Deserialiser implements JsonDeserializer<SurveyContext> {
 
         private static final String ID = "id";
         private static final String EXTENDS = "extends";
         private static final String BLACKLIST = "blacklist";
 
         private final MappingSet mappings;
-        private final Registry<MapperContext> registry = new Registry<>();
+        private final Registry<SurveyContext> registry = new Registry<>();
 
         public Deserialiser(final MappingSet mappings) {
             this.mappings = mappings;
         }
 
         @Override
-        public MapperContext deserialize(
+        public SurveyContext deserialize(
                 final JsonElement element,
                 final Type type,
                 final JsonDeserializationContext ctx) throws JsonParseException {
             if (element.isJsonObject()) {
                 final JsonObject object = element.getAsJsonObject();
 
-                final MapperContext parent;
+                final SurveyContext parent;
                 if (object.has(EXTENDS)) {
                     final String parentId = object.get(EXTENDS).getAsString();
-                    if (this.registry.byId(parentId) == null) throw new JsonParseException("Unknown mapper context!");
+                    if (this.registry.byId(parentId) == null) throw new JsonParseException("Unknown Survey context!");
                     parent = this.registry.byId(parentId);
                 }
                 else {
@@ -91,7 +97,7 @@ public abstract class MapperContext {
 
                 final List<String> blacklist = readBlacklist(object);
 
-                final MapperContext context = new MapperContext(this.mappings, parent) {
+                final SurveyContext context = new SurveyContext(this.mappings, parent) {
                     @Override
                     public boolean blacklisted(final String klass) {
                         for (final String blacklisted : blacklist) {
@@ -110,7 +116,7 @@ public abstract class MapperContext {
             else if (element.isJsonPrimitive()) {
                 final String id = element.getAsString();
                 if (this.registry.byId(id) == null){
-                    throw new JsonParseException("Unknown mapper context: '" + id + "'!");
+                    throw new JsonParseException("Unknown Survey context: '" + id + "'!");
                 }
                 return this.registry.byId(element.getAsString());
             }

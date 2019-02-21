@@ -8,6 +8,7 @@ package org.cadixdev.survey.patcher.proguard;
 
 import static org.objectweb.asm.Opcodes.ASM6;
 
+import org.cadixdev.survey.SurveyContext;
 import org.cadixdev.survey.patcher.AbstractPatcher;
 import org.cadixdev.survey.util.SimpleSignatureVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -26,8 +27,8 @@ import java.util.Deque;
  */
 public class ProguardSignaturePatcher extends AbstractPatcher<Void> {
 
-    public ProguardSignaturePatcher() {
-        super(null);
+    public ProguardSignaturePatcher(final SurveyContext ctx) {
+        super(ctx, null);
     }
 
     @Override

@@ -6,6 +6,7 @@
 
 package org.cadixdev.survey.patcher.proguard.provider;
 
+import org.cadixdev.survey.SurveyContext;
 import org.cadixdev.survey.patcher.proguard.ProguardSignaturePatcher;
 import org.cadixdev.survey.patcher.provider.SimplePatcherProvider;
 
@@ -24,8 +25,8 @@ public class ProguardSignaturePatcherProvider extends SimplePatcherProvider<Prog
     }
 
     @Override
-    public ProguardSignaturePatcher create(final Void config) {
-        return new ProguardSignaturePatcher();
+    public ProguardSignaturePatcher create(final SurveyContext ctx, final Void config) {
+        return new ProguardSignaturePatcher(ctx);
     }
 
 }

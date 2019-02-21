@@ -13,6 +13,7 @@ import org.cadixdev.bombe.type.ObjectType;
 import org.cadixdev.bombe.type.Type;
 import org.cadixdev.bombe.type.signature.MethodSignature;
 import org.cadixdev.lorenz.MappingSet;
+import org.cadixdev.survey.SurveyContext;
 import org.cadixdev.survey.mapper.config.EnumConstantsMapperConfig;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -34,7 +35,7 @@ public class EnumConstantsMapper extends AbstractMapper<EnumConstantsMapperConfi
     private boolean isEnum = false;
     private ObjectType klassType = null;
 
-    public EnumConstantsMapper(final MapperContext ctx, final EnumConstantsMapperConfig config) {
+    public EnumConstantsMapper(final SurveyContext ctx, final EnumConstantsMapperConfig config) {
         super(ctx, config);
     }
 
