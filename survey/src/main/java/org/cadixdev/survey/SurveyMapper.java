@@ -14,10 +14,10 @@ import org.cadixdev.bombe.asm.jar.JarEntryRemappingTransformer;
 import org.cadixdev.bombe.asm.jar.JarFileClassProvider;
 import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
+import org.cadixdev.lorenz.asm.LorenzRemapper;
 import org.cadixdev.lorenz.io.MappingFormat;
 import org.cadixdev.survey.mapper.MapperEnvironment;
 import org.cadixdev.survey.mapper.provider.MapperProviders;
-import org.cadixdev.survey.remapper.SurveyRemapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -83,7 +83,7 @@ public class SurveyMapper {
                     new CachingInheritanceProvider(new ClassProviderInheritanceProvider(new JarFileClassProvider(jarFile)));
             Jars.transform(jarFile, jos,
                     new JarEntryRemappingTransformer(
-                            new SurveyRemapper(this.mappings, inheritance)
+                            new LorenzRemapper(this.mappings, inheritance)
                     )
             );
         }
