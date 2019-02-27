@@ -7,7 +7,7 @@
 package org.cadixdev.survey.mapper.provider;
 
 import org.cadixdev.survey.mapper.FieldNameMapper;
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.mapper.config.FieldNameMapperConfig;
 
 /**

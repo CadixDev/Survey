@@ -15,7 +15,7 @@ import org.cadixdev.bombe.jar.JarClassEntry;
 import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.util.Registry;
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.mapper.provider.MapperProvider;
 import org.objectweb.asm.ClassReader;
 

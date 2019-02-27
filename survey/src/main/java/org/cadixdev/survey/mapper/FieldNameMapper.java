@@ -7,7 +7,7 @@
 package org.cadixdev.survey.mapper;
 
 import org.cadixdev.bombe.type.ObjectType;
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.mapper.config.FieldNameMapperConfig;
 import org.cadixdev.survey.mapper.config.ModifierRequirement;
 import org.objectweb.asm.FieldVisitor;

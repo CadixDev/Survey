@@ -13,7 +13,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import org.cadixdev.lorenz.model.ClassMapping;
 import org.cadixdev.lorenz.model.FieldMapping;
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 import org.objectweb.asm.FieldVisitor;
 
 import java.lang.reflect.Type;

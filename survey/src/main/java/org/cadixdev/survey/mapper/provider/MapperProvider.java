@@ -10,7 +10,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import org.cadixdev.survey.mapper.AbstractMapper;
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 
 /**
  * Used to describe a mapper in complete.

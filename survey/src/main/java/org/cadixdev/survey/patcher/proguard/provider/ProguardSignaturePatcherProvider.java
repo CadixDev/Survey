@@ -6,7 +6,7 @@
 
 package org.cadixdev.survey.patcher.proguard.provider;
 
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.patcher.proguard.ProguardSignaturePatcher;
 import org.cadixdev.survey.patcher.provider.SimplePatcherProvider;
 

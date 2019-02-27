@@ -6,7 +6,7 @@
 
 package org.cadixdev.survey.mapper.intermediary.provider;
 
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.mapper.intermediary.ClassIntermediaryMapper;
 import org.cadixdev.survey.mapper.provider.SimpleMapperProvider;
 

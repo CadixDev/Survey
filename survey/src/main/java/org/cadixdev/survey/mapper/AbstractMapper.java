@@ -8,7 +8,7 @@ package org.cadixdev.survey.mapper;
 
 import static org.objectweb.asm.Opcodes.ASM6;
 
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 import org.objectweb.asm.ClassVisitor;
 
 /**

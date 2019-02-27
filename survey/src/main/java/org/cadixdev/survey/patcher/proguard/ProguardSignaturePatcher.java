@@ -8,7 +8,7 @@ package org.cadixdev.survey.patcher.proguard;
 
 import static org.objectweb.asm.Opcodes.ASM6;
 
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.patcher.AbstractPatcher;
 import org.cadixdev.survey.util.SimpleSignatureVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -43,6 +43,8 @@ public class ProguardSignaturePatcher extends AbstractPatcher<Void> {
      * Example:
      *   Bad:  (TK;)Lzt<TK;TT;TR;>.zt$a;
      *   Good: (TK;)Lzt<TK;TT;TR;>.a;
+     *
+     * @author LexManos
      */
     static class Patcher extends SimpleSignatureVisitor {
 

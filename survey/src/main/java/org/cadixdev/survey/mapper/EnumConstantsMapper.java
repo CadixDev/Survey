@@ -13,7 +13,7 @@ import org.cadixdev.bombe.type.ObjectType;
 import org.cadixdev.bombe.type.Type;
 import org.cadixdev.bombe.type.signature.MethodSignature;
 import org.cadixdev.lorenz.MappingSet;
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.mapper.config.EnumConstantsMapperConfig;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;

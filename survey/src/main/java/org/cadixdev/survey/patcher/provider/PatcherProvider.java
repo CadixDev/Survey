@@ -9,7 +9,7 @@ package org.cadixdev.survey.patcher.provider;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import org.cadixdev.survey.SurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.patcher.AbstractPatcher;
 
 /**
