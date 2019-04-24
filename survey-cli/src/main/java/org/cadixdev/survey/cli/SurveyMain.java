@@ -14,7 +14,6 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.cadixdev.lorenz.io.MappingFormat;
 import org.cadixdev.lorenz.io.MappingFormats;
-import org.cadixdev.survey.SurveyMapper;
 import org.cadixdev.survey.cli.util.MappingFormatValueConverter;
 import org.cadixdev.survey.cli.util.PathValueConverter;
 

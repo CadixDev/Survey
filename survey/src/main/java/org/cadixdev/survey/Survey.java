@@ -115,8 +115,25 @@ public class Survey implements SurveyContext {
                              final BiFunction<SurveyContext, C, AbstractMapper<C>> mapper,
                              final String context,
                              final C config) {
+        return this.mapper(id, mapper, this._getContext(context), config);
+    }
+
+    /**
+     * Registers the given mapper.
+     *
+     * @param id The name of the mapper
+     * @param mapper The mapper instance
+     * @param context The context to use
+     * @param config The config for the mapper
+     * @param <C> The type of the config
+     * @return {@code this}
+     */
+    public <C> Survey mapper(final String id,
+                             final BiFunction<SurveyContext, C, AbstractMapper<C>> mapper,
+                             final SurveyContext context,
+                             final C config) {
         this.mappers.register(id, mapper.apply(
-                this._getContext(context),
+                context,
                 config
         ));
         return this;
@@ -176,6 +193,10 @@ public class Survey implements SurveyContext {
     }
 
     // Internal Methods
+
+    public Registry<SurveyContext> _getContexts() {
+        return this.contexts;
+    }
 
     public SurveyContext _getContext(final String name) {
         if (name == null) return this;

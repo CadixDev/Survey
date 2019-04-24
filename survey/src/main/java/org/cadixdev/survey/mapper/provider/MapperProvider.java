@@ -9,8 +9,9 @@ package org.cadixdev.survey.mapper.provider;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import org.cadixdev.survey.mapper.AbstractMapper;
+import org.cadixdev.survey.Survey;
 import org.cadixdev.survey.context.SurveyContext;
+import org.cadixdev.survey.mapper.AbstractMapper;
 
 /**
  * Used to describe a mapper in complete.
@@ -53,23 +54,14 @@ public interface MapperProvider<M extends AbstractMapper<C>, C> {
      */
     JsonDeserializer<C> getConfigurationDeserialiser();
 
-    /**
-     * De-serialises a mapper from the given JSON context and mapper
-     * context.
-     *
-     * @param mapperCtx The mapper context
-     * @param jsonCtx The JSON context
-     * @param jsonElement The JSON element to de-serialise
-     * @return The mapper instance
-     */
-    default M deserialise(final SurveyContext mapperCtx,
-                          final JsonDeserializationContext jsonCtx, final JsonElement jsonElement) {
-        // De-serialise the configuration
-        final C config = this.getConfigurationDeserialiser()
-                .deserialize(jsonElement, this.getConfigurationClass(), jsonCtx);
-
-        // Create the mapper instance
-        return this.create(mapperCtx, config);
+    default void _register(final Survey survey, final String id, final SurveyContext ctx,
+                          final JsonElement jsonElement, final JsonDeserializationContext jsonCtx) {
+        survey.mapper(
+                id,
+                this::create,
+                ctx,
+                this.getConfigurationDeserialiser().deserialize(jsonElement, this.getConfigurationClass(), jsonCtx)
+        );
     }
 
 }

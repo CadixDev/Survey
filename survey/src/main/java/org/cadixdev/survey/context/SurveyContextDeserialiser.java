@@ -11,8 +11,7 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import org.cadixdev.lorenz.MappingSet;
-import org.cadixdev.lorenz.util.Registry;
+import org.cadixdev.survey.Survey;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -30,11 +29,10 @@ public class SurveyContextDeserialiser implements JsonDeserializer<SurveyContext
     private static final String EXTENDS = "extends";
     private static final String BLACKLIST = "blacklist";
 
-    private final MappingSet mappings;
-    private final Registry<SurveyContext> registry = new Registry<>();
+    private final Survey survey;
 
-    public SurveyContextDeserialiser(final MappingSet mappings) {
-        this.mappings = mappings;
+    public SurveyContextDeserialiser(final Survey survey) {
+        this.survey = survey;
     }
 
     @Override
@@ -48,8 +46,8 @@ public class SurveyContextDeserialiser implements JsonDeserializer<SurveyContext
             final SurveyContext parent;
             if (object.has(EXTENDS)) {
                 final String parentId = object.get(EXTENDS).getAsString();
-                if (this.registry.byId(parentId) == null) throw new JsonParseException("Unknown Survey context!");
-                parent = this.registry.byId(parentId);
+                if (this.survey._getContexts().byId(parentId) == null) throw new JsonParseException("Unknown Survey context!");
+                parent = this.survey._getContexts().byId(parentId);
             }
             else {
                 parent = null;
@@ -57,22 +55,22 @@ public class SurveyContextDeserialiser implements JsonDeserializer<SurveyContext
 
             final List<String> blacklist = readBlacklist(object);
 
-            final SurveyContext context = new CascadingSurveyContext(this.mappings)
-                    .install(new SimpleSurveyContext(this.mappings, blacklist))
+            final SurveyContext context = new CascadingSurveyContext(this.survey.mappings())
+                    .install(new SimpleSurveyContext(this.survey.mappings(), blacklist))
                     .install(parent);
 
             if (object.has(ID)) {
-                this.registry.register(object.get(ID).getAsString(), context);
+                this.survey.context(object.get(ID).getAsString(), context);
             }
 
             return context;
         }
         else if (element.isJsonPrimitive()) {
             final String id = element.getAsString();
-            if (this.registry.byId(id) == null) {
+            if (this.survey._getContexts().byId(id) == null) {
                 throw new JsonParseException("Unknown Survey context: '" + id + "'!");
             }
-            return this.registry.byId(element.getAsString());
+            return this.survey._getContexts().byId(element.getAsString());
         }
         throw new JsonParseException("Don't know how to produce a context!");
     }

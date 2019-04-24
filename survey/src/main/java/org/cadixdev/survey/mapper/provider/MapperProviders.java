@@ -6,11 +6,7 @@
 
 package org.cadixdev.survey.mapper.provider;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.util.Registry;
-import org.cadixdev.survey.mapper.MapperEnvironment;
 
 import java.util.ServiceLoader;
 
@@ -31,23 +27,6 @@ public final class MapperProviders {
         for (final MapperProvider<?, ?> provider : ServiceLoader.load(MapperProvider.class)) {
             REGISTRY.register(provider.getId(), provider);
         }
-    }
-
-    /**
-     * Creates a gson instance, that can be used to de-serialise a mapper environment.
-     *
-     * @param providerRegistry The mapper provider registry
-     * @param mappings The mapping set
-     * @return The gson instance
-     */
-    public static Gson createGson(final Registry<MapperProvider<?, ?>> providerRegistry,
-                                  final MappingSet mappings) {
-        final GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(MapperEnvironment.class, new MapperEnvironment.Deserialiser(mappings, providerRegistry));
-        REGISTRY.values().forEach(provider ->
-                builder.registerTypeAdapter(provider.getConfigurationClass(), provider.getConfigurationDeserialiser())
-        );
-        return builder.create();
     }
 
     private MapperProviders() {
