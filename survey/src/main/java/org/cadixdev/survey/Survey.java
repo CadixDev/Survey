@@ -6,17 +6,21 @@
 
 package org.cadixdev.survey;
 
+import org.cadixdev.bombe.analysis.CachingInheritanceProvider;
+import org.cadixdev.bombe.analysis.InheritanceProvider;
+import org.cadixdev.bombe.asm.analysis.ClassProviderInheritanceProvider;
+import org.cadixdev.bombe.asm.jar.JarEntryRemappingTransformer;
+import org.cadixdev.bombe.asm.jar.JarFileClassProvider;
 import org.cadixdev.bombe.jar.JarClassEntry;
 import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
+import org.cadixdev.lorenz.asm.LorenzRemapper;
+import org.cadixdev.lorenz.util.Registry;
 import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.context.SurveyContextBuilder;
 import org.cadixdev.survey.mapper.AbstractMapper;
-import org.cadixdev.survey.mapper.EnumConstantsMapper;
-import org.cadixdev.survey.mapper.config.EnumConstantsMapperConfig;
 import org.cadixdev.survey.patcher.AbstractPatcher;
-import org.cadixdev.survey.patcher.proguard.ProguardSignaturePatcher;
-import org.cadixdev.survey.util.Registry;
+import org.cadixdev.survey.patcher.JarEntryPatcherTransformer;
 import org.objectweb.asm.ClassReader;
 
 import java.util.ArrayList;
@@ -26,6 +30,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 
 /**
  * The control centre of Survey.
@@ -148,6 +153,26 @@ public class Survey implements SurveyContext {
             this._runMapper(jar, name, mapper);
         });
         return this;
+    }
+
+    public void run(final JarFile jar, final JarOutputStream jos) {
+        this.run(jar, jos, true);
+    }
+
+    public void run(final JarFile jar, final JarOutputStream jos, final boolean map) {
+        if (map) this.map(jar);
+
+        final InheritanceProvider inheritance =
+                new CachingInheritanceProvider(new ClassProviderInheritanceProvider(new JarFileClassProvider(jar)));
+
+        Jars.transform(jar, jos,
+                new JarEntryRemappingTransformer(
+                        new LorenzRemapper(this.mappings, inheritance)
+                ),
+                new JarEntryPatcherTransformer(
+                        this.patchers.values()
+                )
+        );
     }
 
     // Internal Methods
