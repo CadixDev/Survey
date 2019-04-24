@@ -153,8 +153,25 @@ public class Survey implements SurveyContext {
                           final BiFunction<SurveyContext, C, AbstractPatcher<C>> patcher,
                           final String context,
                           final C config) {
+        return this.patcher(id, patcher, this._getContext(context), config);
+    }
+
+    /**
+     * Registers the given patcher.
+     *
+     * @param id The name of the mapper
+     * @param patcher The patcher instance
+     * @param context The context to use
+     * @param config The config for the patcher
+     * @param <C> The type of the config
+     * @return {@code this}
+     */
+    public <C> Survey patcher(final String id,
+                          final BiFunction<SurveyContext, C, AbstractPatcher<C>> patcher,
+                          final SurveyContext context,
+                          final C config) {
         this.patchers.register(id, patcher.apply(
-                this._getContext(context),
+                context,
                 config
         ));
         return this;

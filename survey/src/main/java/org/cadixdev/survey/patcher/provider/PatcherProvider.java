@@ -9,6 +9,7 @@ package org.cadixdev.survey.patcher.provider;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import org.cadixdev.survey.Survey;
 import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.patcher.AbstractPatcher;
 
@@ -53,23 +54,14 @@ public interface PatcherProvider<M extends AbstractPatcher<C>, C> {
      */
     JsonDeserializer<C> getConfigurationDeserialiser();
 
-    /**
-     * De-serialises a patcher from the given JSON context and patcher
-     * context.
-     *
-     * @param patcherCtx The patcher context
-     * @param jsonCtx The JSON context
-     * @param jsonElement The JSON element to de-serialise
-     * @return The patcher instance
-     */
-    default M deserialise(final SurveyContext patcherCtx,
-                          final JsonDeserializationContext jsonCtx, final JsonElement jsonElement) {
-        // De-serialise the configuration
-        final C config = this.getConfigurationDeserialiser()
-                .deserialize(jsonElement, this.getConfigurationClass(), jsonCtx);
-
-        // Create the mapper instance
-        return this.create(patcherCtx, config);
+    default void _register(final Survey survey, final String id, final SurveyContext ctx,
+                           final JsonElement jsonElement, final JsonDeserializationContext jsonCtx) {
+        survey.patcher(
+                id,
+                this::create,
+                ctx,
+                this.getConfigurationDeserialiser().deserialize(jsonElement, this.getConfigurationClass(), jsonCtx)
+        );
     }
 
 }

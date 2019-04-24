@@ -8,18 +8,25 @@ package org.cadixdev.survey.cli;
 
 import static java.util.Arrays.asList;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.cadixdev.lorenz.io.MappingFormat;
 import org.cadixdev.lorenz.io.MappingFormats;
+import org.cadixdev.survey.Survey;
+import org.cadixdev.survey.SurveyDeserialiser;
 import org.cadixdev.survey.cli.util.MappingFormatValueConverter;
 import org.cadixdev.survey.cli.util.PathValueConverter;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 
 /**
  * The Main-Class behind Survey, a simple remapping tool.
@@ -38,30 +45,26 @@ public final class SurveyMain {
         // Modes
         final OptionSpec<Void> helpSpec = parser.acceptsAll(asList("?", "help"), "Show the help").forHelp();
         final OptionSpec<Void> versionSpec = parser.accepts("version", "Shows the version");
-        final OptionSpec<Void> remapSpec = parser.accepts("remap", "Remap a jar");
-        final OptionSpec<Void> mapSpec = parser.accepts("map", "Maps a jar");
+        final OptionSpec<Void> noMapSpec = parser.accepts("no-map", "Do not map the jar");
 
         // Options
-
-        // - Common
         final OptionSpec<MappingFormat> mappingFormatSpec = parser.acceptsAll(asList("mapping-format", "f"), "The mapping format")
                 .withRequiredArg()
                 .withValuesConvertedBy(MappingFormatValueConverter.INSTANCE)
                 .defaultsTo(MappingFormats.SRG);
-        final OptionSpec<Path> jarInSpec = parser.acceptsAll(asList("jar-in", "i"), "The jar to remap/map")
+        final OptionSpec<Path> jarInSpec = parser.acceptsAll(asList("jar-in", "j"), "The jar to remap/map")
                 .withRequiredArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
-        final OptionSpec<Path> outputSpec = parser.acceptsAll(asList("output", "o"), "The output jar/mappings")
+        final OptionSpec<Path> jarOutSpec = parser.acceptsAll(asList("jar-out", "r"), "The output jar")
                 .withRequiredArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
-
-        // - Remap
         final OptionSpec<Path> mappingsInSpec = parser.acceptsAll(asList("mappings-in", "m"), "The mappings to remap with")
                 .withRequiredArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
-
-        // - Map
-        final OptionSpec<Path> configInSpec = parser.acceptsAll(asList("config", "c"), "The mapper configuration")
+        final OptionSpec<Path> mappingsOutSpec = parser.acceptsAll(asList("mappings-out", "s"), "The output mappings")
+                .withRequiredArg()
+                .withValuesConvertedBy(PathValueConverter.INSTANCE);
+        final OptionSpec<Path> configSpec = parser.acceptsAll(asList("config", "c"), "The Survey configuration")
                 .withRequiredArg()
                 .withValuesConvertedBy(PathValueConverter.INSTANCE);
 
@@ -97,43 +100,86 @@ public final class SurveyMain {
                     "the right to distribute modified versions."
             ).forEach(System.out::println);
         }
-        else if (options.has(remapSpec)) {
+        else if (options.has(jarInSpec)) {
             final Path jarInPath = options.valueOf(jarInSpec);
-            final MappingFormat mappingFormat = options.valueOf(mappingFormatSpec);
-
+            final Path jarOutPath = options.valueOf(jarOutSpec);
             if (Files.notExists(jarInPath)) {
                 throw new RuntimeException("Input jar does not exist!");
             }
 
-            final Path mappingsPath = options.valueOf(mappingsInSpec);
-            final Path jarOutPath = options.valueOf(outputSpec);
-
-            if (Files.notExists(mappingsPath)) {
-                throw new RuntimeException("Input mappings does not exist!");
-            }
-
-            new SurveyMapper()
-                    .loadMappings(mappingsPath, mappingFormat)
-                    .remap(jarInPath, jarOutPath);
-        }
-        else if (options.has(mapSpec)) {
-            final Path jarInPath = options.valueOf(jarInSpec);
             final MappingFormat mappingFormat = options.valueOf(mappingFormatSpec);
+            final Path mappingsInPath = options.valueOf(mappingsInSpec);
+            final Path mappingsOutPath = options.valueOf(mappingsOutSpec);
 
-            if (Files.notExists(jarInPath)) {
-                throw new RuntimeException("Input jar does not exist!");
+            final Path configPath = options.valueOf(configSpec);
+
+            final Survey survey = new Survey();
+            final Gson gson = new GsonBuilder()
+                    .registerTypeAdapter(Survey.class, new SurveyDeserialiser(survey))
+                    .create();
+
+            if (mappingsInPath != null) {
+                if (Files.notExists(mappingsInPath)) {
+                    throw new RuntimeException("Input mappings do not exist!");
+                }
+
+                try {
+                    mappingFormat.read(survey.mappings(), mappingsInPath);
+                }
+                catch (final IOException ex) {
+                    System.err.println("Failed to read input mappings!");
+                    ex.printStackTrace(System.err);
+                    System.exit(-1);
+                }
             }
 
-            final Path configPath = options.valueOf(configInSpec);
-            final Path mappingsOutPath = options.valueOf(outputSpec);
+            if (configPath != null) {
+                if (Files.notExists(configPath)) {
+                    throw new RuntimeException("Configuration does not exist!");
+                }
 
-            if (Files.notExists(configPath)) {
-                throw new RuntimeException("Mapper configuration does not exist!");
+                try (final BufferedReader reader = Files.newBufferedReader(configPath)) {
+                    gson.fromJson(reader, Survey.class);
+                }
+                catch (final IOException ex) {
+                    System.err.println("Failed to read configuration!");
+                    ex.printStackTrace(System.err);
+                    System.exit(-1);
+                }
             }
 
-            new SurveyMapper()
-                    .map(jarInPath, configPath)
-                    .saveMappings(mappingsOutPath, mappingFormat);
+            try (final JarFile jar = new JarFile(jarInPath.toFile())) {
+                // Map the jar, if required
+                if (!options.has(noMapSpec)) survey.map(jar);
+
+                // Remap and patch, if required
+                if (jarOutPath != null) {
+                    try (final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(jarOutPath))) {
+                        survey.run(jar, jos, false);
+                    }
+                    catch (final IOException ex) {
+                        System.err.println("Failed to write output jar!");
+                        ex.printStackTrace(System.err);
+                        System.exit(-1);
+                    }
+                }
+            }
+            catch (final IOException ex) {
+                System.err.println("Failed to read input jar!");
+                ex.printStackTrace(System.err);
+                System.exit(-1);
+            }
+
+            if (mappingsOutPath != null) {
+                try {
+                    mappingFormat.write(survey.mappings(), mappingsOutPath);
+                }
+                catch (final IOException ex) {
+                    System.err.println("Failed to write output mappings!");
+                    ex.printStackTrace(System.err);
+                    System.exit(-1);
+                }
+            }
         }
         else {
             try {

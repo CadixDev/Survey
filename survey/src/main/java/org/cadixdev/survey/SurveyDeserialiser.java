@@ -17,6 +17,8 @@ import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.context.SurveyContextDeserialiser;
 import org.cadixdev.survey.mapper.provider.MapperProvider;
 import org.cadixdev.survey.mapper.provider.MapperProviders;
+import org.cadixdev.survey.patcher.provider.PatcherProvider;
+import org.cadixdev.survey.patcher.provider.PatcherProviders;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -25,22 +27,32 @@ public class SurveyDeserialiser implements JsonDeserializer<Survey> {
 
     private static final String CONTEXTS = "contexts";
     private static final String DEFAULT_CONTEXT = "default_context";
+
     private static final String MAPPERS = "mappers";
     private static final String MAPPER_ID = "id";
     private static final String MAPPER_TYPE = "type";
     private static final String MAPPER_CONTEXT = "context";
     private static final String MAPPER_CONFIG = "config";
 
-    private final Survey survey;
-    private final Registry<MapperProvider<?, ?>> registry;
+    private static final String PATCHERS = "patchers";
+    private static final String PATCHER_ID = "id";
+    private static final String PATCHER_TYPE = "type";
+    private static final String PATCHER_CONTEXT = "context";
+    private static final String PATCHER_CONFIG = "config";
 
-    public SurveyDeserialiser() {
-        this(new Survey(), MapperProviders.REGISTRY);
+    private final Survey survey;
+    private final Registry<MapperProvider<?, ?>> mappers;
+    private final Registry<PatcherProvider<?, ?>> patchers;
+
+    public SurveyDeserialiser(final Survey survey) {
+        this(survey, MapperProviders.REGISTRY, PatcherProviders.REGISTRY);
     }
 
-    public SurveyDeserialiser(final Survey survey, final Registry<MapperProvider<?, ?>> registry) {
+    public SurveyDeserialiser(final Survey survey,
+                              final Registry<MapperProvider<?, ?>> mappers, final Registry<PatcherProvider<?, ?>> patchers) {
         this.survey = survey;
-        this.registry = registry;
+        this.mappers = mappers;
+        this.patchers = patchers;
     }
 
     @Override
@@ -70,7 +82,7 @@ public class SurveyDeserialiser implements JsonDeserializer<Survey> {
             defaultCtx = new SimpleSurveyContext(this.survey.mappings(), new ArrayList<>());
         }
 
-        // Read mappers
+        // Read the mappers
         if (object.has(MAPPERS)) {
             final JsonElement mappersElement = object.get(MAPPERS);
             if (!mappersElement.isJsonArray()) throw new JsonParseException("Mappers must be an array!");
@@ -92,13 +104,45 @@ public class SurveyDeserialiser implements JsonDeserializer<Survey> {
                 final String mapperId = mapper.get(MAPPER_ID).getAsString();
                 final String mapperType = mapper.get(MAPPER_TYPE).getAsString();
 
-                final MapperProvider<?, ?> provider = this.registry.byId(mapperType);
+                final MapperProvider<?, ?> provider = this.mappers.byId(mapperType);
                 if (provider == null) throw new JsonParseException("Unknown mapper type specified!");
 
                 if (!mapper.has(MAPPER_CONFIG)) throw new JsonParseException("Mapper configuration not present!");
 
                 // register the mapper instance :)
                 provider._register(this.survey, mapperId, mapperCtx, mapper.get(MAPPER_CONFIG), ctx);
+            }
+        }
+
+        // Read the patchers
+        if (object.has(PATCHERS)) {
+            final JsonElement patchersElement = object.get(PATCHERS);
+            if (!patchersElement.isJsonArray()) throw new JsonParseException("Patchers must be an array!");
+
+            for (final JsonElement arrElement : patchersElement.getAsJsonArray()) {
+                if (!arrElement.isJsonObject()) throw new JsonParseException("Invalid patcher entry!");
+                final JsonObject patcher = arrElement.getAsJsonObject();
+
+                final SurveyContext patcherCtx;
+                if (patcher.has(PATCHER_CONTEXT)) {
+                    patcherCtx = contextDeserialiser.deserialize(patcher.get(PATCHER_CONTEXT), SurveyContext.class, ctx);
+                }
+                else {
+                    patcherCtx = defaultCtx;
+                }
+
+                if (!patcher.has(PATCHER_ID)) throw new JsonParseException("Patcher missing id!");
+                if (!patcher.has(PATCHER_TYPE)) throw new JsonParseException("Patcher missing type!");
+                final String mapperId = patcher.get(PATCHER_ID).getAsString();
+                final String mapperType = patcher.get(PATCHER_TYPE).getAsString();
+
+                final PatcherProvider<?, ?> provider = this.patchers.byId(mapperType);
+                if (provider == null) throw new JsonParseException("Unknown patcher type specified!");
+
+                if (!patcher.has(PATCHER_CONFIG)) throw new JsonParseException("Patcher configuration not present!");
+
+                // register the patcher instance :)
+                provider._register(this.survey, mapperId, patcherCtx, patcher.get(PATCHER_CONFIG), ctx);
             }
         }
 
