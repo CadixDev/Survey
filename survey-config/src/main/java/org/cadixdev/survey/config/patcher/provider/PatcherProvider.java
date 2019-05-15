@@ -60,7 +60,9 @@ public interface PatcherProvider<M extends AbstractPatcher<C>, C> {
                 id,
                 this::create,
                 ctx,
-                this.getConfigurationDeserialiser().deserialize(jsonElement, this.getConfigurationClass(), jsonCtx)
+                this.getConfigurationDeserialiser() != null ?
+                        this.getConfigurationDeserialiser().deserialize(jsonElement, this.getConfigurationClass(), jsonCtx) :
+                        null
         );
     }
 

@@ -10,6 +10,7 @@ import org.cadixdev.bombe.jar.JarClassEntry;
 import org.cadixdev.bombe.jar.JarEntryTransformer;
 import org.cadixdev.survey.Survey;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 
 import java.util.Collection;
@@ -34,10 +35,11 @@ public class JarEntryPatcherTransformer implements JarEntryTransformer {
         final ClassReader reader = new ClassReader(entry.getContents());
         final ClassWriter writer = new ClassWriter(reader, 0);
 
-        // TODO(0.2.0): double-check this
+        ClassVisitor lastVisitor = writer;
         for (final AbstractPatcher<?> patcher : this.patchers) {
-            reader.accept(patcher, 0);
+            lastVisitor = patcher.createVisitor(lastVisitor);
         }
+        reader.accept(lastVisitor, 0);
 
         return new JarClassEntry(entry.getName(), entry.getTime(), writer.toByteArray());
     }

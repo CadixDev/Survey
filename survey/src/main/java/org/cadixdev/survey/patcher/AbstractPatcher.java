@@ -6,10 +6,8 @@
 
 package org.cadixdev.survey.patcher;
 
-import static org.objectweb.asm.Opcodes.ASM6;
-
-import org.cadixdev.survey.context.SurveyContext;
 import org.objectweb.asm.ClassVisitor;
+import org.cadixdev.survey.context.SurveyContext;
 
 /**
  * An object that can patch a target.
@@ -19,13 +17,12 @@ import org.objectweb.asm.ClassVisitor;
  * @author Jamie Mansfield
  * @since 0.2.0
  */
-public abstract class AbstractPatcher<C> extends ClassVisitor {
+public abstract class AbstractPatcher<C> {
 
     protected final SurveyContext ctx;
     protected final C configuration;
 
     public AbstractPatcher(final SurveyContext ctx, final C configuration) {
-        super(ASM6);
         this.ctx = ctx;
         this.configuration = configuration;
     }
@@ -47,5 +44,13 @@ public abstract class AbstractPatcher<C> extends ClassVisitor {
     public final C getConfiguration() {
         return this.configuration;
     }
+
+    /**
+     * Creates a {@link ClassVisitor} to modify the class.
+     *
+     * @param parent The parent class visitor
+     * @return The class visitor
+     */
+    public abstract ClassVisitor createVisitor(final ClassVisitor parent);
 
 }

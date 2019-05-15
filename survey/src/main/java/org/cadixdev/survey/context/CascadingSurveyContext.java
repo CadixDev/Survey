@@ -34,6 +34,7 @@ public class CascadingSurveyContext implements SurveyContext {
      * @return {@code this}, for chaining
      */
     public CascadingSurveyContext install(final SurveyContext ctx) {
+        if (ctx == null) return this;
         this.contexts.add(ctx);
         return this;
     }

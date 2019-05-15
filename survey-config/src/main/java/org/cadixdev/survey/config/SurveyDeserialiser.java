@@ -4,12 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
 package org.cadixdev.survey.config;
 
 import com.google.gson.JsonDeserializationContext;
@@ -145,11 +139,13 @@ public class SurveyDeserialiser implements JsonDeserializer<Survey> {
 
                 final PatcherProvider<?, ?> provider = this.patchers.byId(mapperType);
                 if (provider == null) throw new JsonParseException("Unknown patcher type specified!");
+                final boolean needsConfig = provider.getConfigurationDeserialiser() != null;
 
-                if (!patcher.has(PATCHER_CONFIG)) throw new JsonParseException("Patcher configuration not present!");
+                if (!patcher.has(PATCHER_CONFIG) && needsConfig)
+                    throw new JsonParseException("Patcher configuration not present!");
 
                 // register the patcher instance :)
-                provider._register(this.survey, mapperId, patcherCtx, patcher.get(PATCHER_CONFIG), ctx);
+                provider._register(this.survey, mapperId, patcherCtx, needsConfig ? patcher.get(PATCHER_CONFIG) : null, ctx);
             }
         }
 

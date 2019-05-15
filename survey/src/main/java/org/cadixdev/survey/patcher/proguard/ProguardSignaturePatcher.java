@@ -11,6 +11,7 @@ import static org.objectweb.asm.Opcodes.ASM6;
 import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.patcher.AbstractPatcher;
 import org.cadixdev.survey.util.SimpleSignatureVisitor;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
@@ -18,6 +19,7 @@ import org.objectweb.asm.signature.SignatureWriter;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Objects;
 
 /**
  * A patcher to correct broken signature produced by Proguard.
@@ -32,8 +34,14 @@ public class ProguardSignaturePatcher extends AbstractPatcher<Void> {
     }
 
     @Override
-    public MethodVisitor visitMethod(final int access, final String name, final String descriptor, final String signature, final String[] exceptions) {
-        return super.visitMethod(access, name, descriptor, Patcher.patch(signature), exceptions);
+    public ClassVisitor createVisitor(final ClassVisitor parent) {
+        return new ClassVisitor(ASM6, parent) {
+            @Override
+            public MethodVisitor visitMethod(final int access, final String name, final String descriptor,
+                                             final String signature, final String[] exceptions) {
+                return super.visitMethod(access, name, descriptor, Patcher.patch(signature), exceptions);
+            }
+        };
     }
 
     /**
@@ -55,6 +63,7 @@ public class ProguardSignaturePatcher extends AbstractPatcher<Void> {
          * @return The corrected signature
          */
         static String patch(final String signature) {
+            if (Objects.isNull(signature)) return null;
             final SignatureWriter writer = new SignatureWriter();
             new SignatureReader(signature).accept(new Patcher(writer));
             return writer.toString();
