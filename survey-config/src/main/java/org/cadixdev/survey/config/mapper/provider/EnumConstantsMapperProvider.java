@@ -4,10 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.cadixdev.survey.mapper.provider;
+package org.cadixdev.survey.config.mapper.provider;
 
-import org.cadixdev.survey.mapper.EnumConstantsMapper;
+import org.cadixdev.survey.config.mapper.EnumConstantsMapperConfigDeserialiser;
 import org.cadixdev.survey.context.SurveyContext;
+import org.cadixdev.survey.mapper.EnumConstantsMapper;
 import org.cadixdev.survey.mapper.config.EnumConstantsMapperConfig;
 
 /**
@@ -21,7 +22,7 @@ public class EnumConstantsMapperProvider extends SimpleMapperProvider<EnumConsta
     private static final String ID = "enum_constants";
 
     public EnumConstantsMapperProvider() {
-        super(ID, EnumConstantsMapperConfig.class, EnumConstantsMapperConfig.Deserialiser.INSTANCE);
+        super(ID, EnumConstantsMapperConfig.class, EnumConstantsMapperConfigDeserialiser.INSTANCE);
     }
 
     @Override

@@ -4,11 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.cadixdev.survey.mapper.intermediary.provider;
+package org.cadixdev.survey.config.mapper.intermediary.provider;
 
+import org.cadixdev.survey.config.mapper.intermediary.ClassIntermediaryMapperConfigDeserialiser;
+import org.cadixdev.survey.config.mapper.provider.SimpleMapperProvider;
 import org.cadixdev.survey.context.SurveyContext;
 import org.cadixdev.survey.mapper.intermediary.ClassIntermediaryMapper;
-import org.cadixdev.survey.mapper.provider.SimpleMapperProvider;
 
 /**
  * The mapper provider for the class intermediary mapper.
@@ -22,7 +23,7 @@ public class ClassIntermediaryMapperProvider
     private static final String ID = "intermediary_classes";
 
     public ClassIntermediaryMapperProvider() {
-        super(ID, ClassIntermediaryMapper.Config.class, ClassIntermediaryMapper.Config.Deserialiser.INSTANCE);
+        super(ID, ClassIntermediaryMapper.Config.class, ClassIntermediaryMapperConfigDeserialiser.INSTANCE);
     }
 
     @Override

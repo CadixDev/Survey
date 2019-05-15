@@ -4,10 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.cadixdev.survey.patcher.provider;
+package org.cadixdev.survey.config.mapper.provider;
 
 import org.cadixdev.lorenz.util.Registry;
-import org.cadixdev.survey.mapper.provider.MapperProvider;
 
 import java.util.ServiceLoader;
 
@@ -17,20 +16,20 @@ import java.util.ServiceLoader;
  * @author Jamie Mansfield
  * @since 0.2.0
  */
-public final class PatcherProviders {
+public final class MapperProviders {
 
     /**
-     * A {@link Registry} of {@link PatcherProvider}s, populated by service loaders.
+     * A {@link Registry} of {@link MapperProvider}s, populated by service loaders.
      */
-    public static final Registry<PatcherProvider<?, ?>> REGISTRY = new Registry<>();
+    public static final Registry<MapperProvider<?, ?>> REGISTRY = new Registry<>();
 
     static {
-        for (final PatcherProvider<?, ?> provider : ServiceLoader.load(PatcherProvider.class)) {
+        for (final MapperProvider<?, ?> provider : ServiceLoader.load(MapperProvider.class)) {
             REGISTRY.register(provider.getId(), provider);
         }
     }
 
-    private PatcherProviders() {
+    private MapperProviders() {
     }
 
 }

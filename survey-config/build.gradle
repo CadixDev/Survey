@@ -1,0 +1,6 @@
+dependencies {
+    compile project(':survey')
+
+    // JSON
+    compile 'com.google.code.gson:gson:2.8.5'
+}

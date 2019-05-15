@@ -6,17 +6,10 @@
 
 package org.cadixdev.survey.mapper.intermediary;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import org.cadixdev.lorenz.model.ClassMapping;
 import org.cadixdev.lorenz.model.FieldMapping;
 import org.cadixdev.survey.context.SurveyContext;
 import org.objectweb.asm.FieldVisitor;
-
-import java.lang.reflect.Type;
 
 /**
  * The field intermediary mapper.
@@ -70,30 +63,6 @@ public class FieldIntemediaryMapper extends AbstractIntermediaryMapper<FieldInte
         @Override
         public String getFormat() {
             return this.format;
-        }
-
-        public static class Deserialiser implements JsonDeserializer<FieldIntemediaryMapper.Config> {
-
-            public static final Deserialiser INSTANCE = new Deserialiser();
-
-            private static final String FORMAT = "format";
-            private static final String FORMAT_DEFAULT = "field_{id}_{obf}";
-
-            @Override
-            public FieldIntemediaryMapper.Config deserialize(
-                    final JsonElement element,
-                    final Type type,
-                    final JsonDeserializationContext ctx) throws JsonParseException {
-                if (!element.isJsonObject()) throw new JsonParseException("field intermediary config must be an object!");
-                final JsonObject object = element.getAsJsonObject();
-
-                final String format = object.has(FORMAT) ?
-                        object.get(FORMAT).getAsString() :
-                        FORMAT_DEFAULT;
-
-                return new FieldIntemediaryMapper.Config(format);
-            }
-
         }
 
     }

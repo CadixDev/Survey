@@ -4,27 +4,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.cadixdev.survey.patcher.provider;
+package org.cadixdev.survey.config.mapper.provider;
 
 import com.google.gson.JsonDeserializer;
-import org.cadixdev.survey.patcher.AbstractPatcher;
+import org.cadixdev.survey.mapper.AbstractMapper;
 
 /**
- * A simple implementation of {@link PatcherProvider}, making implementation
+ * A simple implementation of {@link MapperProvider}, making implementation
  * vastly quicker.
  *
- * @param <M> The patcher type
- * @param <C> The patcher configuration type
+ * @param <M> The mapper type
+ * @param <C> The mapper configuration type
  * @author Jamie Mansfield
  * @since 0.2.0
  */
-public abstract class SimplePatcherProvider<M extends AbstractPatcher<C>, C> implements PatcherProvider<M, C> {
+public abstract class SimpleMapperProvider<M extends AbstractMapper<C>, C> implements MapperProvider<M, C> {
 
     private final String id;
     private final Class<C> configType;
     private final JsonDeserializer<C> configDeserialiser;
 
-    public SimplePatcherProvider(final String id,
+    public SimpleMapperProvider(final String id,
                                 final Class<C> configType,
                                 final JsonDeserializer<C> configDeserialiser) {
         this.id = id;
@@ -48,4 +48,3 @@ public abstract class SimplePatcherProvider<M extends AbstractPatcher<C>, C> imp
     }
 
 }
-

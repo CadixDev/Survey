@@ -2,7 +2,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'net.kyori.blossom'
 
 dependencies {
-    compile project(':survey')
+    compile project(':survey-config')
 
     // CLI
     compile 'net.sf.jopt-simple:jopt-simple:5.0.4'

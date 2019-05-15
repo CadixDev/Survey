@@ -17,9 +17,9 @@ import joptsimple.OptionSpec;
 import org.cadixdev.lorenz.io.MappingFormat;
 import org.cadixdev.lorenz.io.MappingFormats;
 import org.cadixdev.survey.Survey;
-import org.cadixdev.survey.SurveyDeserialiser;
 import org.cadixdev.survey.cli.util.MappingFormatValueConverter;
 import org.cadixdev.survey.cli.util.PathValueConverter;
+import org.cadixdev.survey.config.SurveyDeserialiser;
 
 import java.io.BufferedReader;
 import java.io.IOException;

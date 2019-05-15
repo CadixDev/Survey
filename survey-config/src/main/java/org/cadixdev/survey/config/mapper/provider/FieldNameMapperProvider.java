@@ -4,10 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.cadixdev.survey.mapper.provider;
+package org.cadixdev.survey.config.mapper.provider;
 
-import org.cadixdev.survey.mapper.FieldNameMapper;
+import org.cadixdev.survey.config.mapper.FieldNameMapperConfigDeserialiser;
 import org.cadixdev.survey.context.SurveyContext;
+import org.cadixdev.survey.mapper.FieldNameMapper;
 import org.cadixdev.survey.mapper.config.FieldNameMapperConfig;
 
 /**
@@ -21,7 +22,7 @@ public class FieldNameMapperProvider extends SimpleMapperProvider<FieldNameMappe
     private static final String ID = "field_name";
 
     public FieldNameMapperProvider() {
-        super(ID, FieldNameMapperConfig.class, FieldNameMapperConfig.Deserialiser.INSTANCE);
+        super(ID, FieldNameMapperConfig.class, FieldNameMapperConfigDeserialiser.INSTANCE);
     }
 
     @Override

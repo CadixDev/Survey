@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.cadixdev.survey.mapper.provider;
+package org.cadixdev.survey.config.mapper.provider;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;

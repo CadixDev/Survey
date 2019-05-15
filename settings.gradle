@@ -1,4 +1,5 @@
 rootProject.name = name
 include 'survey'
 include 'survey-cli'
+include 'survey-config'
 

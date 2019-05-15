@@ -6,15 +6,8 @@
 
 package org.cadixdev.survey.mapper.intermediary;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import org.cadixdev.lorenz.model.ClassMapping;
 import org.cadixdev.survey.context.SurveyContext;
-
-import java.lang.reflect.Type;
 
 /**
  * The class intermediary mapper.
@@ -67,35 +60,6 @@ public class ClassIntermediaryMapper extends AbstractIntermediaryMapper<ClassInt
 
         public String getPackageName() {
             return this.packageName;
-        }
-
-        public static class Deserialiser implements JsonDeserializer<ClassIntermediaryMapper.Config> {
-
-            public static final Deserialiser INSTANCE = new Deserialiser();
-
-            private static final String PACKAGE = "package";
-            private static final String FORMAT = "format";
-            private static final String FORMAT_DEFAULT = "Class{id}_{obf}";
-
-            @Override
-            public ClassIntermediaryMapper.Config deserialize(
-                    final JsonElement element,
-                    final Type type,
-                    final JsonDeserializationContext ctx) throws JsonParseException {
-                if (!element.isJsonObject()) throw new JsonParseException("class intermediary config must be an object!");
-                final JsonObject object = element.getAsJsonObject();
-
-                final String format = object.has(FORMAT) ?
-                        object.get(FORMAT).getAsString() :
-                        FORMAT_DEFAULT;
-
-                final String packageName = object.has(PACKAGE) ?
-                        object.get(PACKAGE).getAsString() :
-                        "";
-
-                return new ClassIntermediaryMapper.Config(format, packageName);
-            }
-
         }
 
     }

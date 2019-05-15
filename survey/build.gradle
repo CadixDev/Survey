@@ -5,7 +5,4 @@ dependencies {
 
     // CSV
     compile 'me.jamiemansfield:csv:0.1.0'
-
-    // JSON
-    compile 'com.google.code.gson:gson:2.8.5'
 }

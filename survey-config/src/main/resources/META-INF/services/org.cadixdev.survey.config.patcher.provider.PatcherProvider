@@ -4,4 +4,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-org.cadixdev.survey.patcher.proguard.provider.ProguardSignaturePatcherProvider
+org.cadixdev.survey.config.patcher.proguard.provider.ProguardSignaturePatcherProvider

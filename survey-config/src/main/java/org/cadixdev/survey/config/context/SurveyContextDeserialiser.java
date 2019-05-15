@@ -4,7 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.cadixdev.survey.context;
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+package org.cadixdev.survey.config.context;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -12,6 +18,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import org.cadixdev.survey.Survey;
+import org.cadixdev.survey.context.CascadingSurveyContext;
+import org.cadixdev.survey.context.SimpleSurveyContext;
+import org.cadixdev.survey.context.SurveyContext;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
