@@ -5,3 +5,4 @@
 #
 
 org.cadixdev.survey.config.patcher.proguard.provider.ProguardSignaturePatcherProvider
+org.cadixdev.survey.config.patcher.provider.InnerClassInitPatcherProvider
