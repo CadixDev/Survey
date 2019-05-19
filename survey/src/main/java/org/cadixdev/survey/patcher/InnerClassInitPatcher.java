@@ -21,6 +21,10 @@ import org.objectweb.asm.Opcodes;
 
 public class InnerClassInitPatcher extends AbstractPatcher<Void> {
 
+    public static InnerClassInitPatcher create(final SurveyContext ctx, final Void config) {
+        return new InnerClassInitPatcher(ctx);
+    }
+
     public InnerClassInitPatcher(final SurveyContext ctx) {
         super(ctx, null);
     }

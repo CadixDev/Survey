@@ -21,8 +21,13 @@ import org.cadixdev.survey.context.SurveyContextBuilder;
 import org.cadixdev.survey.mapper.AbstractMapper;
 import org.cadixdev.survey.patcher.AbstractPatcher;
 import org.cadixdev.survey.patcher.JarEntryPatcherTransformer;
+import org.cadixdev.survey.patcher.proguard.ProguardSignaturePatcher;
 import org.objectweb.asm.ClassReader;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -140,6 +145,21 @@ public class Survey implements SurveyContext {
     }
 
     /**
+     * Registers the given patcher, using the global context.
+     *
+     * @param id The name of the mapper
+     * @param patcher The patcher instance
+     * @param config The config for the patcher
+     * @param <C> The type of the config
+     * @return {@code this}
+     */
+    public <C> Survey patcher(final String id,
+                              final BiFunction<SurveyContext, C, AbstractPatcher<C>> patcher,
+                              final C config) {
+        return this.patcher(id, patcher, this, config);
+    }
+
+    /**
      * Registers the given patcher.
      *
      * @param id The name of the mapper
@@ -200,13 +220,28 @@ public class Survey implements SurveyContext {
                 new CachingInheritanceProvider(new ClassProviderInheritanceProvider(new JarFileClassProvider(jar)));
 
         Jars.transform(jar, jos,
-                new JarEntryRemappingTransformer(
-                        new LorenzRemapper(this.mappings, inheritance)
-                ),
                 new JarEntryPatcherTransformer(
                         this.patchers.values()
+                ),
+                // remap last
+                new JarEntryRemappingTransformer(
+                        new LorenzRemapper(this.mappings, inheritance)
                 )
         );
+    }
+
+    public void run(final Path input, final Path output, final boolean map) {
+        try (final JarFile jarFile = new JarFile(input.toFile());
+             final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(output))) {
+            this.run(jarFile, jos, map);
+        }
+        catch (final IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void run(final Path input, final Path output) {
+        this.run(input, output, true);
     }
 
     // Internal Methods

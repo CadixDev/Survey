@@ -29,6 +29,10 @@ import java.util.Objects;
  */
 public class ProguardSignaturePatcher extends AbstractPatcher<Void> {
 
+    public static ProguardSignaturePatcher create(final SurveyContext ctx, final Void config) {
+        return new ProguardSignaturePatcher(ctx);
+    }
+
     public ProguardSignaturePatcher(final SurveyContext ctx) {
         super(ctx, null);
     }
