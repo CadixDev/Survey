@@ -58,7 +58,7 @@ public class ProguardSignaturePatcher extends AbstractPatcher<Void> {
      *
      * @author LexManos
      */
-    static class Patcher extends SimpleSignatureVisitor {
+    public static class Patcher extends SimpleSignatureVisitor {
 
         /**
          * Patches the signature.
@@ -66,7 +66,7 @@ public class ProguardSignaturePatcher extends AbstractPatcher<Void> {
          * @param signature The signature
          * @return The corrected signature
          */
-        static String patch(final String signature) {
+        public static String patch(final String signature) {
             if (Objects.isNull(signature)) return null;
             final SignatureWriter writer = new SignatureWriter();
             new SignatureReader(signature).accept(new Patcher(writer));
