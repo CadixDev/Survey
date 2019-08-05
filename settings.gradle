@@ -2,4 +2,5 @@ rootProject.name = name
 include 'survey'
 include 'survey-cli'
 include 'survey-config'
+include 'survey-legacy-shim'
 

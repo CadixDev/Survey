@@ -13,6 +13,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -23,6 +24,10 @@ import java.util.Collection;
  * @since 0.2.0
  */
 public class JarEntryPatcherTransformer implements JarEntryTransformer {
+
+    public static JarEntryPatcherTransformer from(final AbstractPatcher<?>... patchers) {
+        return new JarEntryPatcherTransformer(Arrays.asList(patchers));
+    }
 
     private final Collection<AbstractPatcher<?>> patchers;
 

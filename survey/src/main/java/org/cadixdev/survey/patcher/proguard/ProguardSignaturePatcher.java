@@ -53,8 +53,8 @@ public class ProguardSignaturePatcher extends AbstractPatcher<Void> {
      * It will put the fully qualified obf name for the inner instead of the inner name.
      * So here we try and detect and fix that.
      * Example:
-     *   Bad:  (TK;)Lzt<TK;TT;TR;>.zt$a;
-     *   Good: (TK;)Lzt<TK;TT;TR;>.a;
+     *   Bad:  {@code (TK;)Lzt<TK;TT;TR;>.zt$a;}
+     *   Good: {@code (TK;)Lzt<TK;TT;TR;>.a;}
      *
      * @author LexManos
      */
