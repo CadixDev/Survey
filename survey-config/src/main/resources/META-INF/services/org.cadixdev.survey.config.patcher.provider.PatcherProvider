@@ -6,3 +6,5 @@
 
 org.cadixdev.survey.config.patcher.proguard.provider.ProguardSignaturePatcherProvider
 org.cadixdev.survey.config.patcher.provider.InnerClassInitPatcherProvider
+org.cadixdev.survey.config.patcher.provider.InnerClassPatcherProvider
+org.cadixdev.survey.config.patcher.provider.MappingsPopulatorProvider
