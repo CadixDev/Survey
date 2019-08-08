@@ -7,12 +7,14 @@ buildscript {
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.3'
         classpath 'gradle.plugin.net.kyori:blossom:1.1.0'
+        classpath 'gradle.plugin.net.minecrell:licenser:0.3'
     }
 }
 
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
+    apply plugin: 'net.minecrell.licenser'
 
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
@@ -37,6 +39,10 @@ subprojects {
 
     test {
         useJUnitPlatform()
+    }
+
+    license {
+        header = rootProject.file('HEADER.txt')
     }
 
     processResources {
