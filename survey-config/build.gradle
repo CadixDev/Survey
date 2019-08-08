@@ -2,5 +2,5 @@ dependencies {
     compile project(':survey')
 
     // JSON
-    compile 'com.google.code.gson:gson:2.8.5'
+    compile "org.cadixdev:lorenz-io-gson:${rootProject.lorenzVersion}"
 }

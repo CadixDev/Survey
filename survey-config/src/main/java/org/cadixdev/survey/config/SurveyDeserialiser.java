@@ -11,6 +11,8 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import org.cadixdev.lorenz.MappingSet;
+import org.cadixdev.lorenz.io.gson.MappingSetTypeAdapter;
 import org.cadixdev.lorenz.util.Registry;
 import org.cadixdev.survey.Survey;
 import org.cadixdev.survey.context.SimpleSurveyContext;
@@ -25,6 +27,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class SurveyDeserialiser implements JsonDeserializer<Survey> {
+
+    private static final String MAPPINGS = "mappings";
 
     private static final String CONTEXTS = "contexts";
     private static final String DEFAULT_CONTEXT = "default_context";
@@ -63,6 +67,12 @@ public class SurveyDeserialiser implements JsonDeserializer<Survey> {
             final JsonDeserializationContext ctx) throws JsonParseException {
         if (!element.isJsonObject()) throw new JsonParseException("Invalid Survey configuration!");
         final JsonObject object = element.getAsJsonObject();
+
+        // Read the mappings
+        if (object.has(MAPPINGS)) {
+            final MappingSetTypeAdapter mappingsTypeAdapter = new MappingSetTypeAdapter(this.survey.mappings());
+            mappingsTypeAdapter.deserialize(object.get(MAPPINGS), MappingSet.class, ctx);
+        }
 
         // Read the contexts
         final SurveyContextDeserialiser contextDeserialiser = new SurveyContextDeserialiser(this.survey);
