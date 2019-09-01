@@ -2,6 +2,8 @@ dependencies {
     // Mappings
     compile "org.cadixdev:lorenz:${rootProject.lorenzVersion}"
     compile "org.cadixdev:lorenz-asm:${rootProject.lorenzVersion}"
+    compile "org.cadixdev:bombe:0.4.0-SNAPSHOT"
+    compile "org.cadixdev:bombe-asm:0.4.0-SNAPSHOT"
 
     // CSV
     compile 'me.jamiemansfield:csv:0.1.0'

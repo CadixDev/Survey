@@ -9,10 +9,10 @@ package org.cadixdev.survey;
 import org.cadixdev.bombe.analysis.CachingInheritanceProvider;
 import org.cadixdev.bombe.analysis.InheritanceProvider;
 import org.cadixdev.bombe.asm.analysis.ClassProviderInheritanceProvider;
+import org.cadixdev.bombe.asm.jar.FileSystemClassProvider;
 import org.cadixdev.bombe.asm.jar.JarEntryRemappingTransformer;
-import org.cadixdev.bombe.asm.jar.JarFileClassProvider;
 import org.cadixdev.bombe.jar.JarClassEntry;
-import org.cadixdev.bombe.jar.Jars;
+import org.cadixdev.bombe.jar.Jars2;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.asm.LorenzRemapper;
 import org.cadixdev.lorenz.util.Registry;
@@ -21,21 +21,20 @@ import org.cadixdev.survey.context.SurveyContextBuilder;
 import org.cadixdev.survey.mapper.AbstractMapper;
 import org.cadixdev.survey.patcher.AbstractPatcher;
 import org.cadixdev.survey.patcher.JarEntryPatcherTransformer;
-import org.cadixdev.survey.patcher.proguard.ProguardSignaturePatcher;
 import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
 
 /**
  * The control centre of Survey.
@@ -202,24 +201,26 @@ public class Survey implements SurveyContext {
      *
      * @return {@code this}
      */
-    public Survey map(final JarFile jar) {
+    public Survey map(final FileSystem fs) {
         this.mappers.forEach((name, mapper) -> {
-            this._runMapper(jar, name, mapper);
+            try {
+                this._runMapper(fs, name, mapper);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                // TODO: temp
+            }
         });
         return this;
     }
 
-    public void run(final JarFile jar, final JarOutputStream jos) {
-        this.run(jar, jos, true);
-    }
-
-    public void run(final JarFile jar, final JarOutputStream jos, final boolean map) {
-        if (map) this.map(jar);
+    public void run(final FileSystem input, final Path output, final boolean map) throws IOException {
+        if (map) this.map(input);
 
         final InheritanceProvider inheritance =
-                new CachingInheritanceProvider(new ClassProviderInheritanceProvider(new JarFileClassProvider(jar)));
+                new CachingInheritanceProvider(new ClassProviderInheritanceProvider(new FileSystemClassProvider(input)));
 
-        Jars.transform(jar, jos,
+        Jars2.transform(input, output,
                 new JarEntryPatcherTransformer(
                         this.patchers.values()
                 ),
@@ -230,17 +231,14 @@ public class Survey implements SurveyContext {
         );
     }
 
-    public void run(final Path input, final Path output, final boolean map) {
-        try (final JarFile jarFile = new JarFile(input.toFile());
-             final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(output))) {
-            this.run(jarFile, jos, map);
-        }
-        catch (final IOException ex) {
-            ex.printStackTrace();
+    public void run(final Path input, final Path output, final boolean map) throws IOException {
+        final URI uri = URI.create("jar:" + input.toUri());
+        try (final FileSystem fs = FileSystems.newFileSystem(uri, new HashMap<>())) {
+            run(fs, output, map);
         }
     }
 
-    public void run(final Path input, final Path output) {
+    public void run(final Path input, final Path output) throws IOException {
         this.run(input, output, true);
     }
 
@@ -258,10 +256,10 @@ public class Survey implements SurveyContext {
         return this.contexts.byId(name);
     }
 
-    void _runMapper(final JarFile jar, final String name, final AbstractMapper<?> mapper) {
+    void _runMapper(final FileSystem fs, final String name, final AbstractMapper<?> mapper) throws IOException {
         System.out.println("Running '" + name + "' mapper...");
 
-        Jars.walk(jar)
+        Jars2.walk(fs)
                 .filter(JarClassEntry.class::isInstance)
                 .map(JarClassEntry.class::cast)
                 .filter(entry -> !mapper.ctx().blacklisted(entry.getName()))

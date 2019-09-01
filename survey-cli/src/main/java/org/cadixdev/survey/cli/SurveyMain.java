@@ -23,10 +23,12 @@ import org.cadixdev.survey.config.SurveyDeserialiser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
+import java.util.HashMap;
 
 /**
  * The Main-Class behind Survey, a simple remapping tool.
@@ -148,20 +150,14 @@ public final class SurveyMain {
                 }
             }
 
-            try (final JarFile jar = new JarFile(jarInPath.toFile())) {
+            final URI uri = URI.create("jar:" + jarInPath.toUri());
+            try (final FileSystem fs = FileSystems.newFileSystem(uri, new HashMap<>())) {
                 // Map the jar, if required
-                if (!options.has(noMapSpec)) survey.map(jar);
+                if (!options.has(noMapSpec)) survey.map(fs);
 
                 // Remap and patch, if required
                 if (jarOutPath != null) {
-                    try (final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(jarOutPath))) {
-                        survey.run(jar, jos, false);
-                    }
-                    catch (final IOException ex) {
-                        System.err.println("Failed to write output jar!");
-                        ex.printStackTrace(System.err);
-                        System.exit(-1);
-                    }
+                    survey.run(fs, jarOutPath, false);
                 }
             }
             catch (final IOException ex) {
