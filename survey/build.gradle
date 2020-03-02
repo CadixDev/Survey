@@ -1,5 +1,7 @@
 dependencies {
     // Mappings
+    compile "org.cadixdev:bombe-jar:${rootProject.bombeVersion}"
+    compile "org.cadixdev:atlas:${rootProject.atlasVersion}"
     compile "org.cadixdev:lorenz:${rootProject.lorenzVersion}"
     compile "org.cadixdev:lorenz-asm:${rootProject.lorenzVersion}"
 

@@ -14,6 +14,7 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.cadixdev.atlas.jar.JarFile;
 import org.cadixdev.lorenz.io.MappingFormat;
 import org.cadixdev.lorenz.io.MappingFormats;
 import org.cadixdev.survey.Survey;
@@ -25,8 +26,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
 
 /**
  * The Main-Class behind Survey, a simple remapping tool.
@@ -148,20 +147,13 @@ public final class SurveyMain {
                 }
             }
 
-            try (final JarFile jar = new JarFile(jarInPath.toFile())) {
+            try (final JarFile jar = new JarFile(jarInPath)) {
                 // Map the jar, if required
                 if (!options.has(noMapSpec)) survey.map(jar);
 
                 // Remap and patch, if required
                 if (jarOutPath != null) {
-                    try (final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(jarOutPath))) {
-                        survey.run(jar, jos, false);
-                    }
-                    catch (final IOException ex) {
-                        System.err.println("Failed to write output jar!");
-                        ex.printStackTrace(System.err);
-                        System.exit(-1);
-                    }
+                    survey.run(jar, jarOutPath, false);
                 }
             }
             catch (final IOException ex) {

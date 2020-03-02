@@ -6,13 +6,14 @@
 
 package org.cadixdev.survey;
 
-import org.cadixdev.bombe.analysis.CachingInheritanceProvider;
-import org.cadixdev.bombe.analysis.InheritanceProvider;
-import org.cadixdev.bombe.asm.analysis.ClassProviderInheritanceProvider;
+import static org.cadixdev.atlas.jar.JarVisitOption.IGNORE_MANIFESTS;
+import static org.cadixdev.atlas.jar.JarVisitOption.IGNORE_RESOURCES;
+import static org.cadixdev.atlas.jar.JarVisitOption.IGNORE_SERVICE_PROVIDER_CONFIGURATIONS;
+
+import org.cadixdev.atlas.Atlas;
+import org.cadixdev.atlas.jar.JarFile;
 import org.cadixdev.bombe.asm.jar.JarEntryRemappingTransformer;
-import org.cadixdev.bombe.asm.jar.JarFileClassProvider;
 import org.cadixdev.bombe.jar.JarClassEntry;
-import org.cadixdev.bombe.jar.Jars;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.asm.LorenzRemapper;
 import org.cadixdev.lorenz.util.Registry;
@@ -21,21 +22,16 @@ import org.cadixdev.survey.context.SurveyContextBuilder;
 import org.cadixdev.survey.mapper.AbstractMapper;
 import org.cadixdev.survey.patcher.AbstractPatcher;
 import org.cadixdev.survey.patcher.JarEntryPatcherTransformer;
-import org.cadixdev.survey.patcher.proguard.ProguardSignaturePatcher;
 import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
 
 /**
  * The control centre of Survey.
@@ -53,7 +49,7 @@ public class Survey implements SurveyContext {
     private final Registry<AbstractPatcher<?>> patchers = new Registry<>();
 
     public Survey() {
-        this(MappingSet.create());
+        this(new MappingSet());
     }
 
     public Survey(final MappingSet mappings) {
@@ -209,35 +205,26 @@ public class Survey implements SurveyContext {
         return this;
     }
 
-    public void run(final JarFile jar, final JarOutputStream jos) {
-        this.run(jar, jos, true);
-    }
-
-    public void run(final JarFile jar, final JarOutputStream jos, final boolean map) {
-        if (map) this.map(jar);
-
-        final InheritanceProvider inheritance =
-                new CachingInheritanceProvider(new ClassProviderInheritanceProvider(new JarFileClassProvider(jar)));
-
-        Jars.transform(jar, jos,
-                new JarEntryPatcherTransformer(
-                        this.patchers.values()
-                ),
-                // remap last
-                new JarEntryRemappingTransformer(
-                        new LorenzRemapper(this.mappings, inheritance)
-                )
-        );
-    }
-
     public void run(final Path input, final Path output, final boolean map) {
-        try (final JarFile jarFile = new JarFile(input.toFile());
-             final JarOutputStream jos = new JarOutputStream(Files.newOutputStream(output))) {
-            this.run(jarFile, jos, map);
+        try (final JarFile jar = new JarFile(input)) {
+            this.run(jar, output, map);
         }
         catch (final IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public void run(final JarFile input, final Path output, final boolean map) throws IOException {
+        if (map) this.map(input);
+
+        final Atlas atlas = new Atlas();
+        atlas.install(ctx -> new JarEntryPatcherTransformer(
+                this.patchers.values()
+        ));
+        atlas.install(ctx -> new JarEntryRemappingTransformer(
+                new LorenzRemapper(this.mappings, ctx.inheritanceProvider())
+        ));
+        atlas.run(input, output);
     }
 
     public void run(final Path input, final Path output) {
@@ -261,15 +248,19 @@ public class Survey implements SurveyContext {
     void _runMapper(final JarFile jar, final String name, final AbstractMapper<?> mapper) {
         System.out.println("Running '" + name + "' mapper...");
 
-        Jars.walk(jar)
-                .filter(JarClassEntry.class::isInstance)
-                .map(JarClassEntry.class::cast)
-                .filter(entry -> !mapper.ctx().blacklisted(entry.getName()))
-                .sorted(comparingLength(JarClassEntry::getName))
-                .forEach(entry -> {
-                    final ClassReader klass = new ClassReader(entry.getContents());
-                    klass.accept(mapper, 0);
-                });
+        try {
+            jar.walk(IGNORE_MANIFESTS, IGNORE_SERVICE_PROVIDER_CONFIGURATIONS, IGNORE_RESOURCES)
+                    .map(jar::getClass)
+                    .filter(entry -> !mapper.ctx().blacklisted(entry.getName()))
+                    .sorted(comparingLength(JarClassEntry::getName))
+                    .forEach(entry -> {
+                        final ClassReader klass = new ClassReader(entry.getContents());
+                        klass.accept(mapper, 0);
+                    });
+        }
+        catch (final IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     private static <T> Comparator<T> comparingLength(final Function<? super T, String> keyExtractor) {
