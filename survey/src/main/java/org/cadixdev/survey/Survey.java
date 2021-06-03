@@ -49,7 +49,7 @@ public class Survey implements SurveyContext {
     private final Registry<AbstractPatcher<?>> patchers = new Registry<>();
 
     public Survey() {
-        this(new MappingSet());
+        this(MappingSet.create());
     }
 
     public Survey(final MappingSet mappings) {
